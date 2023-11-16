@@ -1,23 +1,99 @@
-matches = books
-page = 1;
+// Imported data so we can work with it ↓
 
-if (!books && !Array.isArray(books)) throw new Error('Source required') 
-if (!range && range.length < 2) throw new Error('Range must be an array with two numbers')
+import { BOOKS_PER_PAGE, authors, genres, books } from './data.js'
 
-day = {
+// Created an object literal that holds all of our DOM element references ↓
+
+/** The html variable contains an object that holds all of the references to necessary DOM elements so that we can easily work
+ *  with the DOM elements in the JavaScript file.
+ */
+const html = {
+    list: {
+        items: document.querySelector('[data-list-items]'),
+        button: document.querySelector('[data-list-button]'),
+        message: document.querySelector('[data-list-message]'),
+        active: document.querySelector('[data-list-active]'),
+        blur: document.querySelector('[data-list-blur]'),
+        image: document.querySelector('[data-list-image]'),
+        title: document.querySelector('[data-list-title]'),
+        subtitle: document.querySelector('[data-list-subtitle]'),
+        description: document.querySelector('[data-list-description]'),
+    }, 
+    search: { 
+        overlay: document.querySelector('[data-search-overlay]'),
+        form: document.querySelector('[data-search-form]'),
+        cancel: document.querySelector('[data-search-cancel]'),
+        title: document.querySelector('[data-search-title]'),
+        genres: document.querySelector('[data-search-genres]'),
+        authors: document.querySelector('[data-search-authors]'),
+    }, 
+    settings: { 
+        overlay: document.querySelector('[data-settings-overlay]'),
+        form: document.querySelector('[data-settings-form]'),
+        cancel: document.querySelector('[data-settings-cancel]'),
+        theme: document.querySelector('[data-settings-theme]'),
+    },
+    header: {
+        search: document.querySelector('[data-header-search]'),
+        settings: document.querySelector('[data-header-settings]'),
+        help: document.querySelector('[data-header-help]'),
+        add: document.querySelector('[data-header-add]'),
+        order: document.querySelector('[data-header-order]'),
+        grid: document.querySelector('[data-header-grid]'),
+        list: document.querySelector('[data-header-list]'),
+        title: document.querySelector('[data-header-title]'),
+        subtitle: document.querySelector('[data-header-subtitle]'),
+}
+}
+
+// Initialized variables correctly ↓
+
+const matches = books;
+const page = 1;
+
+// Corrected the conditional statement(s) syntax with curly braces ↓
+
+if (!books && !Array.isArray(books)) {
+    throw new Error('Source required') 
+}
+
+if (!range && range.length < 2) {
+    throw new Error('Range must be an array with two numbers')
+}
+
+// Initialized day + night variables correctly ↓
+
+/** A variable that contains an object the dark and light colours for the day theme */
+const day = {
     dark: '10, 10, 20',
     light: '255, 255, 255',
 }
 
-night = {
+/** A variable that contains an object with the dark and light colours for the night theme */
+const night = {
     dark: '255, 255, 255',
     light: '10, 10, 20',
 }
 
-fragment = document.createDocumentFragment()
-const extracted = books.slice(0, 36)
+// Initialized the preview fragment variables correctly ↓
 
-for ({ author, image, title, id }; extracted; i++) {
+/** previewFragment creates and holds a document fragment to be used for the book preview functionality */
+const previewFragment = document.createDocumentFragment();
+
+/** extractedBooks extracts a shallow copy of a portion of the books
+ *  array and creates a new array that contains the first 36 books. 
+ * The original books array is not modified by .slice()
+ */
+const extractedBooks = books.slice(0, BOOKS_PER_PAGE);
+
+
+//  Corrected the for...of syntax + added variable initialization (It was a mix between the i++ method and the    more modern for...of method) ↓
+
+/** The below for...of loop loops through the subset of extracted books (see extracted variable) 
+ *  and creates a preview using the createPreview function.
+ *  The preview is then appended to the fragment variable.
+ */
+for (let { author, image, title, id } of extracted) {
     const preview = createPreview({
         author,
         id,
@@ -28,34 +104,61 @@ for ({ author, image, title, id }; extracted; i++) {
     fragment.appendChild(preview)
 }
 
-data-list-items.appendChild(fragment)
+data-list-items.appendChild(fragment);
 
-genres = document.createDocumentFragment()
-element = document.createElement('option')
-element.value = 'any'
-element = 'All Genres'
-genres.appendChild(element)
+// Initialized genre fragment variables correctly ↓
 
-for ([id, name]; Object.entries(genres); i++) {
-    document.createElement('option')
-    element.value = value
-    element.innerText = text
-    genres.appendChild(element)
+/** genreFragment creates and holds a document fragment */
+const genreFragment = document.createDocumentFragment();
+
+/** element creates and holds a new HTML 'option' element for a genre dropdown list */
+const element = document.createElement('option');
+
+element.value = 'any';
+
+// Used .textContent to add 'All Genres' text to the dropdown list ↓
+
+element.textContent = 'All Genres';
+
+genreFragment.appendChild(element);
+
+/** The below for...of loop loops through each property of the genres object.
+ *  It then creates an HTML option element for each genre and appends it to the genreFragment variable
+ *  which follows on from the 'All Genres' option element.
+ *  The element value is set to the id of the genre and the textContent is set to the genre name.
+ */
+for (let [id, genre] of Object.entries(genres)) {
+    let element = document.createElement('option')
+    element.value = id
+    element.textContent = genre
+    genreFragment.appendChild(element)
 }
 
 data-search-genres.appendChild(genres)
 
-authors = document.createDocumentFragment()
-element = document.createElement('option')
-element.value = 'any'
-element.innerText = 'All Authors'
-authors.appendChild(element)
+// Initialized author fragment variables correctly ↓
 
-for ([id, name];Object.entries(authors); id++) {
-    document.createElement('option')
-    element.value = value
-    element = text
-    authors.appendChild(element)
+/** authorFragment creates and holds a document fragment */
+const authorFragment = document.createDocumentFragment()
+
+/** element creates and holds a new HTML 'option' element for an author dropdown list */
+const element = document.createElement('option')
+
+element.value = 'any'
+element.textContent = 'All Authors'
+
+authorFragment.appendChild(element)
+
+/** The below for...of loop loops through each property of the authors object.
+ *  It then creates an HTML option element for each author and appends it to the authorFragment variable
+ *  which follows on from the 'All Authors' option element.
+ *  The element value is set to the id of the author and the textContent is set to the author name.
+ */
+for (let [id, author] of Object.entries(authors)) {
+    let element = document.createElement('option')
+    element.value = id
+    element.textContent = author
+    authorFragment.appendChild(element)
 }
 
 data-search-authors.appendChild(authors)
