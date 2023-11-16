@@ -1,8 +1,8 @@
 /** The hard-coded amount of books shown per page */
-const BOOKS_PER_PAGE = 36;
+export const BOOKS_PER_PAGE = 36;
 
 /** An object containing a list of properties to identify authors. Each author has a unique id as the object key. */
-const authors = {
+export const authors = {
   "194e164b-9365-4358-b44a-f28a93cc528f": "Steven D. Levitt",
   "76e8065c-fd7a-4a8b-a8ea-6105a47d0781": "Stephen J. Dubner",
   "6b092ae7-283c-45db-80f1-f0cc7e0d4921": "Bill Bryson",
@@ -92,7 +92,7 @@ const authors = {
   "37018341-31f4-4ffa-8755-a49979c218dd": "Suzanne Collins",
 };
 /** An object containing a list of properties to identify genres. Each genre has a unique id as the object key. */
-const genres = {
+export const genres = {
   "a4f80b3e-3e96-4266-b729-e09b71793182": "Economics",
   "6dd5bb6e-0172-4d6e-aa18-26f00954dd7a": "Non-fiction",
   "5439a895-20a8-421a-981d-43f99b521cb5": "Business",
@@ -164,7 +164,7 @@ const genres = {
 };
 
 /** An array that contains nested objects/arrays that is used to identify books. Each book has the following keys: a unique id, a list of genre id's, a popularity score, title, an image with a link, description, amount of pages, the date it was published, and the author id */
-const books = [
+export const books = [
   {
     id: "760b3450-9c86-42d0-8eff-e793bf823756",
     genres: [
