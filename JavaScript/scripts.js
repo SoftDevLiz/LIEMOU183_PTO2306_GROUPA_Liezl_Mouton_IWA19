@@ -4,10 +4,10 @@ import { BOOKS_PER_PAGE, authors, genres, books } from './data.js'
 
 // Created an object literal that holds all of our DOM element references ↓
 
-/** The html variable contains an object that holds all of the references to necessary DOM elements so that we can easily work
+/** The data variable contains an object that holds all of the references to necessary DOM elements so that we can easily work
  *  with the DOM elements in the JavaScript file.
  */
-const html = {
+const data = {
     list: {
         items: document.querySelector('[data-list-items]'),
         button: document.querySelector('[data-list-button]'),
@@ -101,26 +101,31 @@ for (let { author, image, title, id } of extracted) {
         title
     })
 
-    fragment.appendChild(preview)
+    previewFragment.appendChild(preview)
 }
 
-data-list-items.appendChild(fragment);
+// Used our data variable to append the preview fragment to the list ↓
+
+data.list.items.appendChild(previewFragment);
 
 // Initialized genre fragment variables correctly ↓
 
 /** genreFragment creates and holds a document fragment */
 const genreFragment = document.createDocumentFragment();
 
-/** element creates and holds a new HTML 'option' element for a genre dropdown list */
-const element = document.createElement('option');
+/** allGenresOpt creates and holds a new HTML 'option' element for a genre dropdown list.
+ * This element is used to create the 'All Genres' option element, which needs to be 
+ * done separately from the other genres.
+ */
+const allGenresOpt = document.createElement('option')
 
-element.value = 'any';
+allGenresOpt.value = 'any';
 
 // Used .textContent to add 'All Genres' text to the dropdown list ↓
 
-element.textContent = 'All Genres';
+allGenresOpt.textContent = 'All Genres';
 
-genreFragment.appendChild(element);
+genreFragment.appendChild(allGenresOpt);
 
 /** The below for...of loop loops through each property of the genres object.
  *  It then creates an HTML option element for each genre and appends it to the genreFragment variable
@@ -128,26 +133,34 @@ genreFragment.appendChild(element);
  *  The element value is set to the id of the genre and the textContent is set to the genre name.
  */
 for (let [id, genre] of Object.entries(genres)) {
-    let element = document.createElement('option')
-    element.value = id
-    element.textContent = genre
-    genreFragment.appendChild(element)
+    /** genreOption creates and holds an HTML 'option' element for our dropdown list 
+     * that contains the genre id and genre name.
+    */
+    let genreOption = document.createElement('option')
+    genreOption.value = id
+    genreOption.textContent = genre
+    genreFragment.appendChild(genreOption)
 }
 
-data-search-genres.appendChild(genres)
+// Used `data` reference to append the genre fragment to the search overlay ↓
+
+data.search.genres.appendChild(genreFragment)
 
 // Initialized author fragment variables correctly ↓
 
 /** authorFragment creates and holds a document fragment */
 const authorFragment = document.createDocumentFragment()
 
-/** element creates and holds a new HTML 'option' element for an author dropdown list */
-const element = document.createElement('option')
+/** allAuthorsOpt creates and holds a new HTML 'option' element for an author dropdown list.
+ * This element is used to create the 'All Authors' option element, which needs to be 
+ * done separately from the other authors.
+ */
+const allAuthorsOpt = document.createElement('option')
 
-element.value = 'any'
-element.textContent = 'All Authors'
+allAuthorsOpt.value = 'any'
+allAuthorsOpt.textContent = 'All Authors'
 
-authorFragment.appendChild(element)
+authorFragment.appendChild(allAuthorsOpt)
 
 /** The below for...of loop loops through each property of the authors object.
  *  It then creates an HTML option element for each author and appends it to the authorFragment variable
@@ -155,16 +168,26 @@ authorFragment.appendChild(element)
  *  The element value is set to the id of the author and the textContent is set to the author name.
  */
 for (let [id, author] of Object.entries(authors)) {
-    let element = document.createElement('option')
-    element.value = id
-    element.textContent = author
-    authorFragment.appendChild(element)
+      /** authorOption creates and holds an HTML 'option' element for our dropdown list 
+     * that contains the author id and author name.
+    */
+    let authorOption = document.createElement('option')
+    authorOption.value = id
+    authorOption.textContent = author
+    authorFragment.appendChild(authorOption)
 }
 
-data-search-authors.appendChild(authors)
+// Used `data` reference to append the author fragment to the search overlay ↓
 
-data-settings-theme.value === window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day'
-v = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches? 'night' | 'day'
+data.search.authors.appendChild(authorFragment)
+
+// Used `data` reference to refer to the correct elements in the ternary statements ↓
+
+data.settings.theme.value === window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day'
+
+// Corrected the ternary syntax and values ↓
+
+data.settings.theme.value === window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches? 'day' : 'night'
 
 documentElement.style.setProperty('--color-dark', css[v].dark);
 documentElement.style.setProperty('--color-light', css[v].light);
