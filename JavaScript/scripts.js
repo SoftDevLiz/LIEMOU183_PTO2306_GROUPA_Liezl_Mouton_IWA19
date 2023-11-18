@@ -57,9 +57,9 @@ if (!books && !Array.isArray(books)) {
   throw new Error("Source required");
 }
 
-// if (!range && range.length < 2) {
-//   throw new Error("Range must be an array with two numbers");
-// }
+if (!range && range.length < 2) {
+  throw new Error("Range must be an array with two numbers");
+}
 
 // Initialized day + night variables correctly ↓
 
@@ -92,16 +92,16 @@ const extractedBooks = books.slice(0, BOOKS_PER_PAGE);
  *  and creates a preview using the createPreview function.
  *  The preview is then appended to the fragment variable.
  */
-// for (let { author, image, title, id } of extractedBooks) {
-//   const preview = createPreview({
-//     author,
-//     id,
-//     image,
-//     title,
-//   });
+for (let { author, image, title, id } of extractedBooks) {
+  const preview = createPreview({
+    author,
+    id,
+    image,
+    title,
+  });
 
-//   previewFragment.appendChild(preview);
-// }
+  previewFragment.appendChild(preview);
+}
 
 // Used our data variable to append the preview fragment to the list ↓
 
@@ -180,37 +180,24 @@ for (let [id, author] of Object.entries(authors)) {
 
 data.search.authors.appendChild(authorFragment);
 
-// Used `data` reference to refer to the correct elements in the ternary statements ↓
+// Used `data` reference to refer to correct elements in ternary statement and removed redundant ternary ↓
 
 data.settings.theme.value === window.matchMedia &&
 window.matchMedia("(prefers-color-scheme: dark)").matches
   ? "night"
   : "day";
 
-// Corrected the ternary syntax and values ↓
+data.list.button.disabled = !(matches.length - [page * BOOKS_PER_PAGE] > 0);
 
-data.settings.theme.value === window.matchMedia &&
-window.matchMedia("(prefers-color-scheme: light)").matches
-  ? "day"
-  : "night";
+// Used `data` references, added backticks for interpolation, removed square brackets and redundant code ↓
 
-// documentElement.style.setProperty("--color-dark", css[v].dark);
-// documentElement.style.setProperty("--color-light", css[v].light);
-
-// Created booksLeft variable and used interpolation for the show more button ↓
-
-/** The amount of books that are left in the database after viewing 36 `BOOKS_PER_PAGE` */
-let booksLeft = books.length - BOOKS_PER_PAGE;
-data.list.button = `Show more (${booksLeft})`;
-
-// data.list.button.disabled = !(matches.length - [page * BOOKS_PER_PAGE] > 0);
-
-// Used `data` reference to refer to the correct elements ↓
-
-// data.list.button.innerHTML = /* html */ [
-//   "<span>Show more</span>",
-//   '<span class="list__remaining"> (${matches.length - [page * BOOKS_PER_PAGE] > 0 ? matches.length - [page * BOOKS_PER_PAGE] : 0})</span>',
-// ];
+data.list.button.innerHTML =
+  /* html */
+  `<span>Show more</span><span class="list__remaining"> (${
+    matches.length - [page * BOOKS_PER_PAGE] > 0
+      ? matches.length - [page * BOOKS_PER_PAGE]
+      : 0
+  })</span>`;
 
 // Created event listeners and handlers ↓
 
@@ -229,8 +216,25 @@ data.header.settings.addEventListener("click", (event) => {
 data.settings.cancel.addEventListener("click", (event) => {
   data.settings.overlay.close();
 });
-// data.settings.cancel.click() { querySelect(data-settings-overlay).open === false }
-// data.settings.form.submit() { actions.settings.submit }
+
+// Created the theme selection event listener and handler ↓
+
+data.settings.form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const isDay = data.settings.theme.value === "day";
+  const isNight = data.settings.theme.value === "night";
+
+  if (isDay) {
+    document.documentElement.style.setProperty("--color-dark", day.dark);
+    document.documentElement.style.setProperty("--color-light", day.light);
+  } else if (isNight) {
+    document.documentElement.style.setProperty("--color-dark", night.dark);
+    document.documentElement.style.setProperty("--color-light", night.light);
+  }
+
+  data.settings.overlay.close();
+});
+
 // data.list.close.click() { data-list-active.open === false }
 
 // data-list-button.click() {
