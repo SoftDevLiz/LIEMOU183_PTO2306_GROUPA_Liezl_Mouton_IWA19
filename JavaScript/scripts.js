@@ -48,8 +48,14 @@ const data = {
 
 // Initialized variables correctly ↓
 
-const matches = books;
-const page = 1;
+// const matches = books;
+
+/** `PAGE` represents the 'page' that we are on relating to the `BOOKS_PER_PAGE`.
+ * This is used for pagination.
+ * @example If we are on page 1, show the first 36 books.
+ * If we are on page 2, show the next 36 books.
+ */
+let PAGE = 1;
 
 // Corrected the conditional statement(s) syntax with curly braces ↓
 
@@ -86,15 +92,15 @@ const previewFragment = document.createDocumentFragment();
  */
 const extractedBooks = books.slice(0, BOOKS_PER_PAGE);
 
-// Created the `createPreview` function ↓
+// Created the `createsPreview` function ↓
 
-/** `createPreview` creates the button element for our main list of books and then creates the innerHTML of the button
+/** `createsPreview` creates the button element for our main list of books and then creates the innerHTML of the button
  * using the author, image, title and id parameters (which is passed to it from the below for...of loop that is running
  * through each book) and their related existing css classes.
  * The function then returns the preview variable so that it can be appended to the previewFragment, and then the previewFragment
  * gets appended to data.list.items (the div element that holds the list of books, 36 `BOOKS_PER_PAGE`)
  */
-const createPreview = ({ author, image, title, id }) => {
+const createsPreview = ({ author, image, title, id }) => {
   /** `preview` creates/holds a singular button element and the innerHTML and css styling is applied
    * to it. A button is created for each book the loop is looping through.
    */
@@ -114,22 +120,28 @@ const createPreview = ({ author, image, title, id }) => {
 
 //  Corrected the for...of syntax + added variable initialization (It was a mix between the i++ method and the more modern for...of method) ↓
 
-/** The below for...of loop loops through the subset of extracted books (see extracted variable)
- *  and creates a preview using the createPreview function.
- *  The preview is then appended to the fragment variable.
+/** `previewLoop` loops through the subset of `extractedBooks` and then `createsPreview`
+ *  for each book for the current page. It then appends the `preview` to the `previewFragment`.
  */
-for (let { author, image, title, id } of extractedBooks) {
-  const preview = createPreview({
-    author,
-    image,
-    title,
-    id,
-  });
+const previewLoop = () => {
+  for (let { author, image, title, id } of extractedBooks) {
+    /** `preview` holds the preview for an individual book, created by the `createsPreview` function */
+    const preview = createsPreview({
+      author,
+      image,
+      title,
+      id,
+    });
 
-  previewFragment.appendChild(preview);
-}
+    previewFragment.appendChild(preview);
+  }
+};
 
-// Used our data variable to append the preview fragment to the list ↓
+// Called the `previewLoop` function for the first page load ↓
+
+previewLoop();
+
+// Used our data variable to append the preview fragment to the list for the first page load ↓
 
 data.list.items.appendChild(previewFragment);
 
@@ -213,40 +225,6 @@ window.matchMedia("(prefers-color-scheme: dark)").matches
   ? "night"
   : "day";
 
-data.list.button.disabled = !(matches.length - [page * BOOKS_PER_PAGE] > 0);
-
-// Used `data` references, added backticks for interpolation, removed square brackets and redundant code ↓
-
-/** The below ternary passes the text content of the "show more" button to the related button element.
- * It then interpolates an expression that checks to see if there are any books remaining to be displayed,
- * and then displays the amount of books that are left to be displayed. It also includes css styling.
- */
-data.list.button.innerHTML =
-  /* html */
-  `<span>Show more</span><span class="list__remaining"> (${
-    matches.length - [page * BOOKS_PER_PAGE] > 0
-      ? matches.length - [page * BOOKS_PER_PAGE]
-      : 0
-  })</span>`;
-
-// Created event listeners and handlers for the toggling of overlays ↓
-
-data.header.search.addEventListener("click", (event) => {
-  data.search.overlay.show();
-});
-
-data.search.cancel.addEventListener("click", (event) => {
-  data.search.overlay.close();
-});
-
-data.header.settings.addEventListener("click", (event) => {
-  data.settings.overlay.show();
-});
-
-data.settings.cancel.addEventListener("click", (event) => {
-  data.settings.overlay.close();
-});
-
 // Created the theme selection event listener and handler ↓
 
 /** The below event listener listens for when the user submits the form. The event listener is tied to the form
@@ -278,13 +256,93 @@ data.settings.form.addEventListener("submit", (event) => {
   data.settings.overlay.close();
 });
 
-// data.list.close.click() { data-list-active.open === false }
+// Created the `remainingBooks` function ↓
+
+/** `remainingBooks` checks to see if the remaining amount of books `isNotZero`.
+ * If it is not zero, it `updatesRemaining` amount of books and returns the `remaining` amount of books.
+ * If it is zero, it returns 0 and disables the button.
+ */
+const remainingBooks = () => {
+  /** `isNotZero` checks if the remaining amount of books is bigger than 0 */
+  const isNotZero = books.length - [PAGE * BOOKS_PER_PAGE] > 0;
+
+  if (isNotZero) {
+    /** `remaining` calculates the remaining amount of books */
+    const remaining = books.length - [PAGE * BOOKS_PER_PAGE];
+    return remaining;
+  } else {
+    data.list.button.disabled = true;
+    return 0;
+  }
+};
+
+// Used `data` references, added backticks for interpolation, removed square brackets and redundant code, made it into a function ↓
+
+/** `updateShowMore` updates the 'show more' button visually depending on the `remainingBooks` */
+const updatesShowMore = () => {
+  data.list.button.innerHTML =
+    /* html */
+    `<span>Show more</span>
+      <span class="list__remaining"> (${remainingBooks()})</span>`;
+};
+
+// Called the `updateShowMore` to update the 'show more' for the initial page load ↓
+
+updatesShowMore();
+
+// Created event listeners and handlers for the toggling of overlays ↓
+
+data.header.search.addEventListener("click", (event) => {
+  data.search.overlay.show();
+});
+
+data.search.cancel.addEventListener("click", (event) => {
+  data.search.overlay.close();
+});
+
+data.header.settings.addEventListener("click", (event) => {
+  data.settings.overlay.show();
+});
+
+data.settings.cancel.addEventListener("click", (event) => {
+  data.settings.overlay.close();
+});
+
+// Created the event listener and handler for the 'show more' button ↓
+
+/** `showMoreHandler` handles the 'show more' button click event.
+ * It calculates the `start` and `end` of the next page of books,
+ * extracts it from `books`and calls the `previewLoop` which `createsPreview`
+ * for each book for the current page. It then appends the `preview` to the `previewFragment`
+ * and then appends that to the list of books to update the UI.
+ *  It then increments `PAGE` by 1 for the next page and calls `updatesShowMore` to update the 'show more' button.
+ */
+const showMoreHandler = (event) => {
+  /** `start` holds the starting index for the `books` slicing */
+  const start = PAGE * BOOKS_PER_PAGE;
+  /** `end` holds the ending index for the `books` slicing */
+  const end = (PAGE + 1) * BOOKS_PER_PAGE;
+  /** `extractedBooks` holds the books we have extracted from the slicing */
+  const extractedBooks = books.slice(start, end);
+
+  previewLoop();
+
+  data.list.items.appendChild(previewFragment);
+
+  PAGE++;
+
+  updatesShowMore();
+};
+
+data.list.button.addEventListener("click", showMoreHandler);
 
 // data-list-button.click() {
-//     document.querySelector([data-list-items]).appendChild(createPreviewsFragment(matches, page x BOOKS_PER_PAGE, {page + 1} x BOOKS_PER_PAGE]))
-//     actions.list.updateRemaining()
-//     page = page + 1
+//   document.querySelector([data-list-items]).appendChild(createsPreviewsFragment(matches, page x BOOKS_PER_PAGE, {page + 1} x BOOKS_PER_PAGE]))
+//   actions.list.updateRemaining()
+//   page = page + 1
 // }
+
+// data.list.close.click() { data-list-active.open === false }
 
 // data-header-search.click() {
 //     data-search-overlay.open === true ;
