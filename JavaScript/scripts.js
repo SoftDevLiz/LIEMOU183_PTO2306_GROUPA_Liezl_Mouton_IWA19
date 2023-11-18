@@ -57,9 +57,9 @@ if (!books && !Array.isArray(books)) {
   throw new Error("Source required");
 }
 
-if (!range && range.length < 2) {
-  throw new Error("Range must be an array with two numbers");
-}
+// if (!range && range.length < 2) {
+//   throw new Error("Range must be an array with two numbers");
+// }
 
 // Initialized day + night variables correctly ↓
 
@@ -86,6 +86,29 @@ const previewFragment = document.createDocumentFragment();
  */
 const extractedBooks = books.slice(0, BOOKS_PER_PAGE);
 
+// Created the createPreview function ↓
+
+/** `createPreview` creates the button element for our main list of books and then creates the innerHTML of the button
+ * using the author, image, title and id parameters (which is passed to it from the below for...of loop that is running
+ * through each book) and their related existing css classes for the styling.
+ * The function then returns the preview variable so that it can be appended to the previewFragment, and then the previewFragment
+ * gets appended to data.list.items (the div element that holds the list of books, 36 `BOOKS_PER_PAGE`)
+ */
+const createPreview = ({ author, image, title, id }) => {
+  const preview = document.createElement("button");
+  preview.classList = "preview";
+  preview.setAttribute("book-id", id);
+  preview.innerHTML = /* html */ `
+  <img class="preview__image" src="${image}"/>
+
+    <div class="preview__info">
+      <h3 class="preview__title">${title}</h3>
+      <div class="preview__author">${authors[author]}</div>
+  </div>`;
+
+  return preview;
+};
+
 //  Corrected the for...of syntax + added variable initialization (It was a mix between the i++ method and the    more modern for...of method) ↓
 
 /** The below for...of loop loops through the subset of extracted books (see extracted variable)
@@ -95,9 +118,9 @@ const extractedBooks = books.slice(0, BOOKS_PER_PAGE);
 for (let { author, image, title, id } of extractedBooks) {
   const preview = createPreview({
     author,
-    id,
     image,
     title,
+    id,
   });
 
   previewFragment.appendChild(preview);
@@ -234,6 +257,8 @@ data.settings.form.addEventListener("submit", (event) => {
 
   data.settings.overlay.close();
 });
+
+console.log(data.header.grid);
 
 // data.list.close.click() { data-list-active.open === false }
 
