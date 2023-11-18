@@ -86,15 +86,18 @@ const previewFragment = document.createDocumentFragment();
  */
 const extractedBooks = books.slice(0, BOOKS_PER_PAGE);
 
-// Created the createPreview function ↓
+// Created the `createPreview` function ↓
 
 /** `createPreview` creates the button element for our main list of books and then creates the innerHTML of the button
  * using the author, image, title and id parameters (which is passed to it from the below for...of loop that is running
- * through each book) and their related existing css classes for the styling.
+ * through each book) and their related existing css classes.
  * The function then returns the preview variable so that it can be appended to the previewFragment, and then the previewFragment
  * gets appended to data.list.items (the div element that holds the list of books, 36 `BOOKS_PER_PAGE`)
  */
 const createPreview = ({ author, image, title, id }) => {
+  /** `preview` creates/holds a singular button element and the innerHTML and css styling is applied
+   * to it. A button is created for each book the loop is looping through.
+   */
   const preview = document.createElement("button");
   preview.classList = "preview";
   preview.setAttribute("book-id", id);
@@ -109,7 +112,7 @@ const createPreview = ({ author, image, title, id }) => {
   return preview;
 };
 
-//  Corrected the for...of syntax + added variable initialization (It was a mix between the i++ method and the    more modern for...of method) ↓
+//  Corrected the for...of syntax + added variable initialization (It was a mix between the i++ method and the more modern for...of method) ↓
 
 /** The below for...of loop loops through the subset of extracted books (see extracted variable)
  *  and creates a preview using the createPreview function.
@@ -132,10 +135,10 @@ data.list.items.appendChild(previewFragment);
 
 // Initialized genre fragment variables correctly ↓
 
-/** genreFragment creates and holds a document fragment */
+/** `genreFragment` holds a document fragment that will contain a the list of genres for the genre dropdown list */
 const genreFragment = document.createDocumentFragment();
 
-/** allGenresOpt creates and holds a new HTML 'option' element for a genre dropdown list.
+/** `allGenresOpt` creates and holds a new HTML 'option' element for a genre dropdown list.
  * This element is used to create the 'All Genres' option element, which needs to be
  * done separately from the other genres.
  */
@@ -214,6 +217,10 @@ data.list.button.disabled = !(matches.length - [page * BOOKS_PER_PAGE] > 0);
 
 // Used `data` references, added backticks for interpolation, removed square brackets and redundant code ↓
 
+/** The below ternary passes the text content of the "show more" button to the related button element.
+ * It then interpolates an expression that checks to see if there are any books remaining to be displayed,
+ * and then displays the amount of books that are left to be displayed. It also includes css styling.
+ */
 data.list.button.innerHTML =
   /* html */
   `<span>Show more</span><span class="list__remaining"> (${
@@ -222,7 +229,7 @@ data.list.button.innerHTML =
       : 0
   })</span>`;
 
-// Created event listeners and handlers ↓
+// Created event listeners and handlers for the toggling of overlays ↓
 
 data.header.search.addEventListener("click", (event) => {
   data.search.overlay.show();
@@ -242,9 +249,22 @@ data.settings.cancel.addEventListener("click", (event) => {
 
 // Created the theme selection event listener and handler ↓
 
+/** The below event listener listens for when the user submits the form. The event listener is tied to the form
+ * as a whole and not the button so allow the user to submit using the enter key. So it will actually run when
+ * the user clicks the submit button or presses the enter key.
+ * When the user submits the form, the event listener prevents the default behaviour of the form so that we can
+ * work with the form data. The event handler then checks to see if the theme value is equal to day or night
+ * and changes the CSS variables accordingly.
+ */
 data.settings.form.addEventListener("submit", (event) => {
   event.preventDefault();
+  /** `isDay` checks to see if the value of the dropdown list option for the current theme is 'day' or 'night',
+   * returning true or false.
+   */
   const isDay = data.settings.theme.value === "day";
+  /**`isNight` checks to see if the value of the dropdown list option for the current theme is 'day' or 'night',
+   * returning true or false.
+   */
   const isNight = data.settings.theme.value === "night";
 
   if (isDay) {
@@ -257,8 +277,6 @@ data.settings.form.addEventListener("submit", (event) => {
 
   data.settings.overlay.close();
 });
-
-console.log(data.header.grid);
 
 // data.list.close.click() { data-list-active.open === false }
 
