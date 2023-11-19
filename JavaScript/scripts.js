@@ -4,7 +4,7 @@ import { BOOKS_PER_PAGE, authors, genres, books } from "./data.js";
 
 // Created an object literal that holds all of our DOM element references ↓
 
-/** The data variable contains an object that holds all of the references to necessary DOM elements so that we can easily work
+/** `data` contains an object that holds all of the references to necessary DOM elements so that we can easily work
  *  with the DOM elements in the JavaScript file.
  */
 const data = {
@@ -69,41 +69,39 @@ if (!books && !Array.isArray(books)) {
 
 // Initialized day + night variables correctly ↓
 
-/** A variable that contains an object the dark and light colours for the day theme */
+/** `day` contains the dark and light colours for the day theme */
 const day = {
   dark: "10, 10, 20",
   light: "255, 255, 255",
 };
 
-/** A variable that contains an object with the dark and light colours for the night theme */
+/** `night` contains the dark and light colours for the night theme */
 const night = {
   dark: "255, 255, 255",
   light: "10, 10, 20",
 };
 
+/*
+
+                                                PREVIEW CREATION ↓
+
+*/
+
 // Initialized the preview fragment variables correctly ↓
 
-/** previewFragment creates and holds a document fragment to be used for the book preview functionality */
+/** `previewFragment` creates and holds a document fragment to be used for the book preview functionality */
 const previewFragment = document.createDocumentFragment();
-
-/** extractedBooks extracts a shallow copy of a portion of the books
- *  array and creates a new array that contains the first 36 books.
- * The original books array is not modified by .slice()
- */
-const extractedBooks = books.slice(0, BOOKS_PER_PAGE);
 
 // Created the `createsPreview` function ↓
 
-/** `createsPreview` creates the button element for our main list of books and then creates the innerHTML of the button
+/** `createsPreview` creates the button element for each of our main list of books and then creates the innerHTML of the button
  * using the author, image, title and id parameters (which is passed to it from the below for...of loop that is running
  * through each book) and their related existing css classes.
- * The function then returns the preview variable so that it can be appended to the previewFragment, and then the previewFragment
+ * The function then returns the `preview` so that it can be appended to the `previewFragment`, and then that
  * gets appended to data.list.items (the div element that holds the list of books, 36 `BOOKS_PER_PAGE`)
  */
 const createsPreview = ({ author, image, title, id }) => {
-  /** `preview` creates/holds a singular button element and the innerHTML and css styling is applied
-   * to it. A button is created for each book the loop is looping through.
-   */
+  /** `preview` creates/holds a button element for each book which is each books `preview` */
   const preview = document.createElement("button");
   preview.classList = "preview";
   preview.setAttribute("book-id", id);
@@ -117,6 +115,12 @@ const createsPreview = ({ author, image, title, id }) => {
 
   return preview;
 };
+
+/** `extractedBooks` extracts a shallow copy of a portion of the `books`
+ *  array and creates a new array that contains the first 36 books.
+ * The original books array is not modified by .slice()
+ */
+let extractedBooks = books.slice(0, BOOKS_PER_PAGE);
 
 //  Corrected the for...of syntax + added variable initialization (It was a mix between the i++ method and the more modern for...of method) ↓
 
@@ -137,15 +141,21 @@ const previewLoop = () => {
   }
 };
 
-// Called the `previewLoop` function for the first page load ↓
+// Called `previewLoop` function for the first page load ↓
 
 previewLoop();
 
-// Used our data variable to append the preview fragment to the list for the first page load ↓
+// Used `data` to append the `preview` to the list for the first page load ↓
 
 data.list.items.appendChild(previewFragment);
 
-// Initialized genre fragment variables correctly ↓
+/*
+
+                                                SEARCH DROPDOWN CREATION ↓  
+
+*/
+
+// Initialized `genreFragment` variable correctly ↓
 
 /** `genreFragment` holds a document fragment that will contain a the list of genres for the genre dropdown list */
 const genreFragment = document.createDocumentFragment();
@@ -164,8 +174,8 @@ allGenresOpt.textContent = "All Genres";
 
 genreFragment.appendChild(allGenresOpt);
 
-/** The below for...of loop loops through each property of the genres object.
- *  It then creates an HTML option element for each genre and appends it to the genreFragment variable
+/** The below for...of loop loops through each property of the `genres` object.
+ *  It then creates an HTML 'option' element for each genre and appends it to the `genreFragment`
  *  which follows on from the 'All Genres' option element.
  *  The element value is set to the id of the genre and the textContent is set to the genre name.
  */
@@ -179,16 +189,16 @@ for (let [id, genre] of Object.entries(genres)) {
   genreFragment.appendChild(genreOption);
 }
 
-// Used `data` reference to append the genre fragment to the search overlay ↓
+// Used `data` reference to append the `genreFragment` to the search overlay ↓
 
 data.search.genres.appendChild(genreFragment);
 
-// Initialized author fragment variables correctly ↓
+// Initialized `authorFragment` variables correctly ↓
 
-/** authorFragment creates and holds a document fragment */
+/** `authorFragment` creates and holds a document fragment that will contain the authors for the dropdown list */
 const authorFragment = document.createDocumentFragment();
 
-/** allAuthorsOpt creates and holds a new HTML 'option' element for an author dropdown list.
+/** `allAuthorsOpt` creates and holds a new HTML 'option' element for an author dropdown list.
  * This element is used to create the 'All Authors' option element, which needs to be
  * done separately from the other authors.
  */
@@ -199,8 +209,8 @@ allAuthorsOpt.textContent = "All Authors";
 
 authorFragment.appendChild(allAuthorsOpt);
 
-/** The below for...of loop loops through each property of the authors object.
- *  It then creates an HTML option element for each author and appends it to the authorFragment variable
+/** The below for...of loop loops through each property of the `authors` object.
+ *  It then creates an HTML option element for each author and appends it to the `authorFragment`
  *  which follows on from the 'All Authors' option element.
  *  The element value is set to the id of the author and the textContent is set to the author name.
  */
@@ -214,9 +224,15 @@ for (let [id, author] of Object.entries(authors)) {
   authorFragment.appendChild(authorOption);
 }
 
-// Used `data` reference to append the author fragment to the search overlay ↓
+// Used `data` reference to append the `authorFragment` to the search overlay ↓
 
 data.search.authors.appendChild(authorFragment);
+
+/*
+
+                                                            THEME SELECTION ↓
+
+*/
 
 // Used `data` reference to refer to correct elements in ternary statement and removed redundant ternary ↓
 
@@ -228,9 +244,8 @@ window.matchMedia("(prefers-color-scheme: dark)").matches
 // Created the theme selection event listener and handler ↓
 
 /** The below event listener listens for when the user submits the form. The event listener is tied to the form
- * as a whole and not the button so allow the user to submit using the enter key. So it will actually run when
- * the user clicks the submit button or presses the enter key.
- * When the user submits the form, the event listener prevents the default behaviour of the form so that we can
+ * as a whole and not the submit button so it can run when the user clicks the submit button or presses the enter key.
+ * When the user submits the form, the event handler prevents the default behaviour of the form so that we can
  * work with the form data. The event handler then checks to see if the theme value is equal to day or night
  * and changes the CSS variables accordingly.
  */
@@ -256,14 +271,20 @@ data.settings.form.addEventListener("submit", (event) => {
   data.settings.overlay.close();
 });
 
+/*
+
+                                                REMAINING BOOKS FOR SHOW MORE BUTTON AND EVENT ↓
+
+*/
+
 // Created the `remainingBooks` function ↓
 
 /** `remainingBooks` checks to see if the remaining amount of books `isNotZero`.
- * If it is not zero, it `updatesRemaining` amount of books and returns the `remaining` amount of books.
+ * If it is not zero, it updates the remaining amount of books and returns the `remaining` amount of books.
  * If it is zero, it returns 0 and disables the button.
  */
 const remainingBooks = () => {
-  /** `isNotZero` checks if the remaining amount of books is bigger than 0 */
+  /** `isNotZero` checks if the remaining amount of books is bigger than 0, returning true or false */
   const isNotZero = books.length - [PAGE * BOOKS_PER_PAGE] > 0;
 
   if (isNotZero) {
@@ -290,6 +311,12 @@ const updatesShowMore = () => {
 
 updatesShowMore();
 
+/*
+
+                                                  BASIC TOGGLE EVENTS ↓
+
+*/
+
 // Created event listeners and handlers for the toggling of overlays ↓
 
 data.header.search.addEventListener("click", (event) => {
@@ -308,11 +335,17 @@ data.settings.cancel.addEventListener("click", (event) => {
   data.settings.overlay.close();
 });
 
+/*
+
+                                                  MORE COMPLICATED EVENTS ↓    
+
+*/
+
 // Created the event listener and handler for the 'show more' button ↓
 
 /** `showMoreHandler` handles the 'show more' button click event.
  * It calculates the `start` and `end` of the next page of books,
- * extracts it from `books`and calls the `previewLoop` which `createsPreview`
+ * extracts it from `books` and calls the `previewLoop` which `createsPreview`
  * for each book for the current page. It then appends the `preview` to the `previewFragment`
  * and then appends that to the list of books to update the UI.
  *  It then increments `PAGE` by 1 for the next page and calls `updatesShowMore` to update the 'show more' button.
@@ -323,7 +356,7 @@ const showMoreHandler = (event) => {
   /** `end` holds the ending index for the `books` slicing */
   const end = (PAGE + 1) * BOOKS_PER_PAGE;
   /** `extractedBooks` holds the books we have extracted from the slicing */
-  const extractedBooks = books.slice(start, end);
+  extractedBooks = books.slice(start, end);
 
   previewLoop();
 
