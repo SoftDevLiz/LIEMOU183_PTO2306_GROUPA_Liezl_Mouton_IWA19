@@ -27402,7 +27402,7 @@ const rawBookData = [
   },
 ];
 
-/** Our `books` without duplicates, filtered from `rawBookData` in data.js */
+/** All `books` without duplicates, filtered from `rawBookData` in data.js */
 export const books = rawBookData.filter(
   (book, index, self) => index === self.findIndex((t) => t.title === book.title)
 );
