@@ -1,6 +1,47 @@
-// Imported data so we can work with it ↓
+/*
+
+                                                              IMPORTS + GLOBAL VARIABLES ↓
+
+*/
 
 import { BOOKS_PER_PAGE, authors, genres, books } from "./data.js";
+
+// Initialized variables correctly ↓
+
+/** `page` represents the 'page' that we are on relating to the `BOOKS_PER_PAGE`.
+ * This is used for pagination.
+ * @example If we are on page 1, show the first 36 books.
+ * If we are on page 2, show the next 36 books.
+ */
+let page = 1;
+/** `searchResults` is an array of the matching books from the users search
+ * (user can search: title, author, genre) */
+let searchResults = [];
+/** `initialPageResults` is an array of the initial matching books from the users search before they click 'show more' */
+let initialPageResults = [];
+
+/*
+
+                                                                DOCUMENT FRAGMENTS ↓
+
+*/
+
+// Initialized fragment variables correctly ↓
+
+/** `searchResultsFragment` holds a document fragment to be used to display the search results */
+const searchResultsFragment = document.createDocumentFragment();
+/** `bookListFragment` holds a document fragment to be used for the book preview functionality */
+const bookListFragment = document.createDocumentFragment();
+/** `genreFragment` holds a document fragment that will contain a the list of genres for the genre dropdown list */
+const genreFragment = document.createDocumentFragment();
+/** `authorFragment` holds a document fragment that will contain the authors for the dropdown list */
+const authorFragment = document.createDocumentFragment();
+
+/*
+
+                                                                DOM REFERENCES ↓
+
+*/
 
 // Created an object literal that holds all of our DOM element references ↓
 
@@ -46,17 +87,6 @@ const data = {
   },
 };
 
-// Initialized variables correctly ↓
-
-// const matches = books;
-
-/** `PAGE` represents the 'page' that we are on relating to the `BOOKS_PER_PAGE`.
- * This is used for pagination.
- * @example If we are on page 1, show the first 36 books.
- * If we are on page 2, show the next 36 books.
- */
-let PAGE = 1;
-
 // Corrected the conditional statement(s) syntax with curly braces ↓
 
 if (!books && !Array.isArray(books)) {
@@ -67,40 +97,21 @@ if (!books && !Array.isArray(books)) {
 //   throw new Error("Range must be an array with two numbers");
 // }
 
-// Initialized day + night variables correctly ↓
-
-/** `day` contains the dark and light colours for the day theme */
-const day = {
-  dark: "10, 10, 20",
-  light: "255, 255, 255",
-};
-
-/** `night` contains the dark and light colours for the night theme */
-const night = {
-  dark: "255, 255, 255",
-  light: "10, 10, 20",
-};
-
 /*
 
-                                                PREVIEW CREATION ↓
+                                                              PREVIEW CREATION ↓
 
 */
 
-// Initialized the preview fragment variables correctly ↓
+// Created the `createBookElement` function ↓
 
-/** `previewFragment` creates and holds a document fragment to be used for the book preview functionality */
-const previewFragment = document.createDocumentFragment();
-
-// Created the `createsPreview` function ↓
-
-/** `createsPreview` creates the button element for each of our main list of books and then creates the innerHTML of the button
+/** `createBookElement` creates the button element for each of our main list of books and then creates the innerHTML of the button
  * using the author, image, title and id parameters (which is passed to it from the below for...of loop that is running
  * through each book) and their related existing css classes.
- * The function then returns the `preview` so that it can be appended to the `previewFragment`, and then that
+ * The function then returns the `preview` so that it can be appended to the `bookListFragment`, and then that
  * gets appended to data.list.items (the div element that holds the list of books, 36 `BOOKS_PER_PAGE`)
  */
-const createsPreview = ({ author, image, title, id }) => {
+const createBookElement = ({ author, image, title, id }) => {
   /** `preview` creates/holds a button element for each book which is each books `preview` */
   const preview = document.createElement("button");
   preview.classList = "preview";
@@ -116,49 +127,42 @@ const createsPreview = ({ author, image, title, id }) => {
   return preview;
 };
 
-/** `extractedBooks` extracts a shallow copy of a portion of the `books`
- *  array and creates a new array that contains the first 36 books.
- * The original books array is not modified by .slice()
+/** `currentPageBooks` holds the subset of `books` that will be displayed on the current page.
+ * 36 `BOOKS_PER_PAGE`.
  */
-let extractedBooks = books.slice(0, BOOKS_PER_PAGE);
+let currentPageBooks = books.slice(0, BOOKS_PER_PAGE);
 
 //  Corrected the for...of syntax + added variable initialization (It was a mix between the i++ method and the more modern for...of method) ↓
 
-/** `previewLoop` loops through the subset of `extractedBooks` and then `createsPreview`
- *  for each book for the current page. It then appends the `preview` to the `previewFragment`.
+/** `renderBookList` loops through the subset of `currentPageBooks` and then `createBookElement`
+ *  for each book for the current page. It then appends the `preview` to the `bookListFragment`.
  */
-const previewLoop = () => {
-  for (let { author, image, title, id } of extractedBooks) {
-    /** `preview` holds the preview for an individual book, created by the `createsPreview` function */
-    const preview = createsPreview({
+const renderBookList = (object, fragment) => {
+  for (let { author, image, title, id } of object) {
+    /** `preview` holds the preview for an individual book, created by the `createBookElement` function */
+    const preview = createBookElement({
       author,
       image,
       title,
       id,
     });
 
-    previewFragment.appendChild(preview);
+    fragment.appendChild(preview);
+    data.list.items.appendChild(fragment);
   }
 };
 
-// Called `previewLoop` function for the first page load ↓
+// Called `renderBookList` function for the first page load ↓
 
-previewLoop();
+renderBookList(currentPageBooks, bookListFragment);
 
 // Used `data` to append the `preview` to the list for the first page load ↓
-
-data.list.items.appendChild(previewFragment);
 
 /*
 
                                                 SEARCH DROPDOWN CREATION ↓  
 
 */
-
-// Initialized `genreFragment` variable correctly ↓
-
-/** `genreFragment` holds a document fragment that will contain a the list of genres for the genre dropdown list */
-const genreFragment = document.createDocumentFragment();
 
 /** `allGenresOpt` creates and holds a new HTML 'option' element for a genre dropdown list.
  * This element is used to create the 'All Genres' option element, which needs to be
@@ -193,11 +197,6 @@ for (let [id, genre] of Object.entries(genres)) {
 
 data.search.genres.appendChild(genreFragment);
 
-// Initialized `authorFragment` variables correctly ↓
-
-/** `authorFragment` creates and holds a document fragment that will contain the authors for the dropdown list */
-const authorFragment = document.createDocumentFragment();
-
 /** `allAuthorsOpt` creates and holds a new HTML 'option' element for an author dropdown list.
  * This element is used to create the 'All Authors' option element, which needs to be
  * done separately from the other authors.
@@ -230,9 +229,23 @@ data.search.authors.appendChild(authorFragment);
 
 /*
 
-                                                            THEME SELECTION ↓
+                                                            THEME SELECTION EVENT ↓
 
 */
+
+// Initialized day + night variables correctly ↓
+
+/** `day` contains the dark and light colours for the day theme */
+const day = {
+  dark: "10, 10, 20",
+  light: "255, 255, 255",
+};
+
+/** `night` contains the dark and light colours for the night theme */
+const night = {
+  dark: "255, 255, 255",
+  light: "10, 10, 20",
+};
 
 // Used `data` reference to refer to correct elements in ternary statement and removed redundant ternary ↓
 
@@ -283,13 +296,15 @@ data.settings.form.addEventListener("submit", (event) => {
  * If it is not zero, it updates the remaining amount of books and returns the `remaining` amount of books.
  * If it is zero, it returns 0 and disables the button.
  */
-const remainingBooks = () => {
+const remainingBooks = (object) => {
   /** `isNotZero` checks if the remaining amount of books is bigger than 0, returning true or false */
-  const isNotZero = books.length - [PAGE * BOOKS_PER_PAGE] > 0;
+  const isNotZero = object.length - [page * BOOKS_PER_PAGE] > 0;
 
   if (isNotZero) {
+    data.list.button.disabled = false;
     /** `remaining` calculates the remaining amount of books */
-    const remaining = books.length - [PAGE * BOOKS_PER_PAGE];
+    const remaining = object.length - [page * BOOKS_PER_PAGE];
+
     return remaining;
   } else {
     data.list.button.disabled = true;
@@ -299,21 +314,21 @@ const remainingBooks = () => {
 
 // Used `data` references, added backticks for interpolation, removed square brackets and redundant code, made it into a function ↓
 
-/** `updateShowMore` updates the 'show more' button visually depending on the `remainingBooks` */
-const updatesShowMore = () => {
+/** `updateShowMoreBtn` updates the 'show more' button visually depending on the `remainingBooks` */
+const updateShowMoreBtn = (object) => {
   data.list.button.innerHTML =
     /* html */
     `<span>Show more</span>
-      <span class="list__remaining"> (${remainingBooks()})</span>`;
+      <span class="list__remaining"> (${remainingBooks(object)})</span>`;
 };
 
-// Called the `updateShowMore` to update the 'show more' for the initial page load ↓
+// Called the `updateShowMoreBtn` to update the 'show more' for the initial page load ↓
 
-updatesShowMore();
+updateShowMoreBtn(books);
 
 /*
 
-                                                  BASIC TOGGLE EVENTS ↓
+                                                              BASIC TOGGLE EVENTS ↓
 
 */
 
@@ -321,6 +336,7 @@ updatesShowMore();
 
 data.header.search.addEventListener("click", (event) => {
   data.search.overlay.show();
+  data.search.title.focus();
 });
 
 data.search.cancel.addEventListener("click", (event) => {
@@ -337,7 +353,7 @@ data.settings.cancel.addEventListener("click", (event) => {
 
 /*
 
-                                                  MORE COMPLICATED EVENTS ↓    
+                                                                SHOW MORE BUTTON ↓    
 
 */
 
@@ -345,132 +361,157 @@ data.settings.cancel.addEventListener("click", (event) => {
 
 /** `showMoreHandler` handles the 'show more' button click event.
  * It calculates the `start` and `end` of the next page of books,
- * extracts it from `books` and calls the `previewLoop` which `createsPreview`
- * for each book for the current page. It then appends the `preview` to the `previewFragment`
+ * extracts it from `books` and calls the `renderBookList` which `createBookElement`
+ * for each book for the current page. It then appends the `preview` to the `bookListFragment`
  * and then appends that to the list of books to update the UI.
- *  It then increments `PAGE` by 1 for the next page and calls `updatesShowMore` to update the 'show more' button.
+ *  It then increments `page` by 1 for the next page and calls `updateShowMoreBtn` to update the 'show more' button.
  */
 const showMoreHandler = (event) => {
   /** `start` holds the starting index for the `books` slicing */
-  const start = PAGE * BOOKS_PER_PAGE;
+  const start = page * BOOKS_PER_PAGE;
   /** `end` holds the ending index for the `books` slicing */
-  const end = (PAGE + 1) * BOOKS_PER_PAGE;
-  /** `extractedBooks` holds the books we have extracted from the slicing */
-  extractedBooks = books.slice(start, end);
+  const end = (page + 1) * BOOKS_PER_PAGE;
 
-  previewLoop();
+  if (searchResults.length > 0) {
+    let currentPageResults = searchResults.slice(start, end);
 
-  data.list.items.appendChild(previewFragment);
+    renderBookList(currentPageResults, searchResultsFragment);
 
-  PAGE++;
+    page++;
 
-  updatesShowMore();
+    updateShowMoreBtn(searchResults);
+  } else {
+    currentPageBooks = books.slice(start, end);
+
+    renderBookList(currentPageBooks, bookListFragment);
+
+    page++;
+
+    updateShowMoreBtn(books);
+  }
 };
 
 data.list.button.addEventListener("click", showMoreHandler);
 
-// data-list-button.click() {
-//   document.querySelector([data-list-items]).appendChild(createsPreviewsFragment(matches, page x BOOKS_PER_PAGE, {page + 1} x BOOKS_PER_PAGE]))
-//   actions.list.updateRemaining()
-//   page = page + 1
-// }
+/*
 
-// data.list.close.click() { data-list-active.open === false }
+                                                        SEARCH RESULTS FILTERING + DISPLAYING ↓
 
-// data-header-search.click() {
-//     data-search-overlay.open === true ;
-//     data-search-title.focus();
-// }
+*/
 
-// data-search-form.click(filters) {
-//     preventDefault()
-//     const formData = new FormData(event.target)
-//     const filters = Object.fromEntries(formData)
-//     result = []
+/** Filters the books based on the user's search form entries
+ * @param {array} books - The array of books to be filtered
+ * @param {object} filters - The object containing the user's search form entries
+ */
+const filterBooks = (books, filters) => {
+  for (let book of books) {
+    let titleMatch =
+      filters.title.trim() === "" ||
+      book.title.toLowerCase().includes(filters.title.toLowerCase());
 
-//     for (book; booksList; i++) {
-//         titleMatch = filters.title.trim() = '' && book.title.toLowerCase().includes[filters.title.toLowerCase()]
-//         authorMatch = filters.author = 'any' || book.author === filters.author
+    let authorMatch =
+      filters.author === "any" || book.author === filters.author;
 
-//         {
-//             genreMatch = filters.genre = 'any'
-//             for (genre; book.genres; i++) { if singleGenre = filters.genre { genreMatch === true }}}
-//         }
+    let genreMatch = filters.genre === "any";
 
-//         if titleMatch && authorMatch && genreMatch => result.push(book)
-//     }
+    for (let singleGenre of book.genres) {
+      if (singleGenre === filters.genre) {
+        genreMatch = true;
+      }
+    }
 
-//     if display.length < 1
-//     data-list-message.class.add('list__message_show')
-//     else data-list-message.class.remove('list__message_show')
+    if (titleMatch && authorMatch && genreMatch) {
+      searchResults.push(book);
+    }
+  }
+};
+/** Displays error message to user if no results are found */
+const displayIfNoResults = () => {
+  searchResults.length < 1
+    ? data.list.message.classList.add("list__message_show")
+    : data.list.message.classList.remove("list__message_show");
+};
 
-//     data-list-items.innerHTML = ''
-//     const fragment = document.createDocumentFragment()
-//     const extracted = source.slice(range[0], range[1])
+/** Extracts the initial page load results (0 - 36 `BOOKS_PER_PAGE`) before the user clicks 'show more' */
+const extractInitialResults = () => {
+  let page = 0;
+  const start = page * BOOKS_PER_PAGE;
+  const end = (page + 1) * BOOKS_PER_PAGE;
 
-//     for ({ author, image, title, id }; extracted; i++) {
-//         const { author: authorId, id, image, title } = props
+  initialPageResults = searchResults.slice(start, end);
+  return initialPageResults;
+};
 
-//         element = document.createElement('button')
-//         element.classList = 'preview'
-//         element.setAttribute('data-preview', id)
+const searchResultsHandler = (event) => {
+  // Prevent the default behaviour of the form so that we can work with the form data ↓
+  event.preventDefault();
 
-//         element.innerHTML = /* html */ `
-//             <img
-//                 class="preview__image"
-//                 src="${image}"
-//             />
+  // Reset page to 0 and empty searchResults so that the search results are not appended to the previous search results, and so that the `page` is reset to 0 for the new search results ↓
 
-//             <div class="preview__info">
-//                 <h3 class="preview__title">${title}</h3>
-//                 <div class="preview__author">${authors[authorId]}</div>
-//             </div>
-//         `
+  page = 1;
+  searchResults.length = 0;
 
-//         fragment.appendChild(element)
-//     }
+  // Extract form entries and store it in `filters` ↓
 
-//     data-list-items.appendChild(fragments)
-//     initial === matches.length - [page * BOOKS_PER_PAGE]
-//     remaining === hasRemaining ? initial : 0
-//     data-list-button.disabled = initial > 0
+  const formData = new FormData(event.target);
+  const filters = Object.fromEntries(formData);
 
-//     data-list-button.innerHTML = /* html */ `
-//         <span>Show more</span>
-//         <span class="list__remaining"> (${remaining})</span>
-//     `
+  // Call `filterBooks` to filter the books based on the user's search form entries ↓
 
-//     window.scrollTo({ top: 0, behavior: 'smooth' });
-//     data-search-overlay.open = false
-// }
+  filterBooks(books, filters);
 
-// data-settings-overlay.submit; {
-//     preventDefault()
-//     const formData = new FormData(event.target)
-//     const result = Object.fromEntries(formData)
-//     document.documentElement.style.setProperty('--color-dark', css[result.theme].dark);
-//     document.documentElement.style.setProperty('--color-light', css[result.theme].light);
-//     data-settings-overlay).open === false
-// }
+  // Call `displayIfNoResults` to display error message if no results are found ↓
 
-// data-list-items.click() {
-//     pathArray = Array.from(event.path || event.composedPath())
-//     active;
+  displayIfNoResults();
 
-//     for (node; pathArray; i++) {
-//         if active break;
-//         const previewId = node?.dataset?.preview
+  // Empty the initial list so that the search results can be displayed ↓
 
-//         for (const singleBook of books) {
-//             if (singleBook.id === id) active = singleBook
-//         }
-//     }
+  data.list.items.innerHTML = "";
 
-//     if !active return
-//     data-list-active.open === true
-//     data-list-blur + data-list-image === active.image
-//     data-list-title === active.title
+  // Call `extractInitialResults` to get the initial 36 results ↓
 
-//     data-list-subtitle === '${authors[active.author]} (${Date(active.published).year})'
-//     data-list-description === active.description
-// }
+  extractInitialResults(searchResults);
+
+  // Call `renderBookList` to render the initial page load results ↓
+
+  renderBookList(initialPageResults, searchResultsFragment);
+
+  // Call `updateShowMoreBtn` to update the 'show more' button based on the search results ↓
+
+  updateShowMoreBtn(searchResults);
+
+  // Close the search overlay and scroll to the top of the page ↓
+
+  data.search.overlay.close();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+data.search.form.addEventListener("submit", searchResultsHandler);
+
+data.list.items.addEventListener("click", (event) => {
+    
+});
+
+data-list-items.click() {
+    pathArray = Array.from(event.path || event.composedPath())
+    active;
+
+    for (node; pathArray; i++) {
+        if active break;
+        const previewId = node?.dataset?.preview
+
+        for (const singleBook of books) {
+            if (singleBook.id === id) active = singleBook
+        }
+    }
+
+    if !active return
+    data-list-active.open === true
+    data-list-blur + data-list-image === active.image
+    data-list-title === active.title
+
+    data-list-subtitle === '${authors[active.author]} (${Date(active.published).year})'
+    data-list-description === active.description
+}
+
+
