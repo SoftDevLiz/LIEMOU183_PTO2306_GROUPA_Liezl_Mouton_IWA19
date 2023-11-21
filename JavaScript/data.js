@@ -164,7 +164,7 @@ export const genres = {
 };
 
 /** An array that contains nested objects/arrays that is used to identify books. Each book has the following keys: a unique id, a list of genre id's, a popularity score, title, an image with a link, description, amount of pages, the date it was published, and the author id */
-export const books = [
+const rawBookData = [
   {
     id: "760b3450-9c86-42d0-8eff-e793bf823756",
     genres: [
@@ -27401,3 +27401,8 @@ export const books = [
     author: "8e7083f4-7613-4872-a21b-62fbe33fe180",
   },
 ];
+
+/** Our `books` without duplicates, filtered from `rawBookData` in data.js */
+export const books = rawBookData.filter(
+  (book, index, self) => index === self.findIndex((t) => t.title === book.title)
+);
