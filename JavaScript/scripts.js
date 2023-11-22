@@ -8,18 +8,6 @@ import { BOOKS_PER_PAGE, authors, genres, books } from "./data.js";
 
 // Initialized variables correctly ↓
 
-/** `page` represents the 'page' that we are on relating to the `BOOKS_PER_PAGE`.
- * This is used for pagination.
- * @example If we are on page 1, show the first 36 books.
- * If we are on page 2, show the next 36 books.
- */
-let page = 1;
-/** `searchResults` is an array of the matching books from the users search
- * (user can search: title, author, genre) */
-let searchResults = [];
-/** `initialPageResults` is an array of the initial matching books from the users search before they click 'show more' */
-let initialPageResults = [];
-
 /*
 
                                                                 DOCUMENT FRAGMENTS ↓
@@ -54,6 +42,7 @@ const data = {
     button: document.querySelector("[data-list-button]"),
     message: document.querySelector("[data-list-message]"),
     active: document.querySelector("[data-list-active]"),
+    close: document.querySelector("[data-list-close]"),
     blur: document.querySelector("[data-list-blur]"),
     image: document.querySelector("[data-list-image]"),
     title: document.querySelector("[data-list-title]"),
@@ -87,19 +76,9 @@ const data = {
   },
 };
 
-// Corrected the conditional statement(s) syntax with curly braces ↓
-
-if (!books && !Array.isArray(books)) {
-  throw new Error("Source required");
-}
-
-// if (!range && range.length < 2) {
-//   throw new Error("Range must be an array with two numbers");
-// }
-
 /*
 
-                                                              PREVIEW CREATION ↓
+                                                                INITIAL BOOK LISTS ↓
 
 */
 
@@ -126,6 +105,22 @@ const createBookElement = ({ author, image, title, id }) => {
 
   return preview;
 };
+
+/** `initialPageResults` is an array of the initial 36 `BOOKS_PER_PAGE` from the user's search before they click 'show more'
+ * in order to display the initial 36 results to the user.
+ */
+let initialPageResults = [];
+
+/** Extracts the `initialPageResults` (0 - 36 `BOOKS_PER_PAGE`) before the user clicks 'show more'.
+ * @param {object} object - The object that you want to extract the initial results from.
+ * @returns {array} - Returns the initial results (0 - 36 `BOOKS_PER_PAGE`).
+ */
+const extractInitialResults = (object) => {
+  initialPageResults = object.slice(0, BOOKS_PER_PAGE);
+  return initialPageResults;
+};
+
+extractInitialResults(books);
 
 /** `currentPageBooks` holds the subset of `books` that will be displayed on the current page.
  * 36 `BOOKS_PER_PAGE`.
@@ -290,6 +285,13 @@ data.settings.form.addEventListener("submit", (event) => {
 
 */
 
+/** `page` represents the 'page' that we are on relating to the `BOOKS_PER_PAGE`.
+ * This is used for pagination when it comes to the `showMoreHandler`(Show more button).
+ * @example If we are on page 1, show the first 36 books.
+ * If we are on page 2, show the next 36 books.
+ */
+let page = 1;
+
 // Created the `remainingBooks` function ↓
 
 /** `remainingBooks` checks to see if the remaining amount of books `isNotZero`.
@@ -334,15 +336,6 @@ updateShowMoreBtn(books);
 
 // Created event listeners and handlers for the toggling of overlays ↓
 
-data.header.search.addEventListener("click", (event) => {
-  data.search.overlay.show();
-  data.search.title.focus();
-});
-
-data.search.cancel.addEventListener("click", (event) => {
-  data.search.overlay.close();
-});
-
 data.header.settings.addEventListener("click", (event) => {
   data.settings.overlay.show();
 });
@@ -357,40 +350,74 @@ data.settings.cancel.addEventListener("click", (event) => {
 
 */
 
-// Created the event listener and handler for the 'show more' button ↓
+/** `searchResults` is an array of the matching books from the users search (user can search: title, author, genre). */
+let searchResults = [];
 
-/** `showMoreHandler` handles the 'show more' button click event.
- * It calculates the `start` and `end` of the next page of books,
- * extracts it from `books` and calls the `renderBookList` which `createBookElement`
- * for each book for the current page. It then appends the `preview` to the `bookListFragment`
- * and then appends that to the list of books to update the UI.
- *  It then increments `page` by 1 for the next page and calls `updateShowMoreBtn` to update the 'show more' button.
+/** `remainingPageResults` is an array that stores the remaining books to be displayed when the user clicks the 'show more' button. */
+let remainingPageResults = [];
+
+/** Extracts the remaining results to be displayed when the user clicks the 'show more' button.
+ * @param {object} object - The object that you want to extract the remaining results from.
+ * @returns {array} - Returns the remaining results data to render the book list for it.
  */
-const showMoreHandler = (event) => {
-  /** `start` holds the starting index for the `books` slicing */
+const extractRemainingResults = (object) => {
+  // Get the starting and ending index for the slicing. This is based on the `page` variable. Every time the user clicks the 'show more' button, the `page` variable increases by 1, therefore we can get the next batch of 36 `BOOKS_PER_PAGE` ↓
+
+  /** `start` holds the starting index for the slicing */
   const start = page * BOOKS_PER_PAGE;
-  /** `end` holds the ending index for the `books` slicing */
+
+  /** `end` holds the ending index for the slicing */
   const end = (page + 1) * BOOKS_PER_PAGE;
 
+  // Slice the array based on the starting and ending index to get the remaining results ↓
+
+  remainingPageResults = object.slice(start, end);
+
+  // Increment page by 1 so that the next time the user clicks the 'show more' button, the next batch of 36 `BOOKS_PER_PAGE` is displayed ↓
+
+  page++;
+
+  // Return the remaining results so that we can render the book list for it ↓
+
+  return remainingPageResults;
+};
+
+/** `showMoreHandler` handles the 'show more' button click event.
+ * If the user has used the search feature, the button will work based on the `searchResults` array.
+ * If the user has not used the search feature (in other words they are on the website how they initially found it),
+ * the button will work based on the original `books` array.
+ */
+const showMoreHandler = () => {
+  // Start the conditional statement ↓
+
   if (searchResults.length > 0) {
-    let currentPageResults = searchResults.slice(start, end);
+    // Call `extractRemainingResults` to get the remaining results based on the `searchResults` array ↓
 
-    renderBookList(currentPageResults, searchResultsFragment);
+    extractRemainingResults(searchResults);
 
-    page++;
+    // Call `renderBookList` to render the remaining results based on the extracted `remainingPageResults` array ↓
+
+    renderBookList(remainingPageResults, searchResultsFragment);
+
+    // Call `updateShowMoreBtn` to update the 'show more' button based on the remaining books of the `searchResults` array ↓
 
     updateShowMoreBtn(searchResults);
   } else {
-    currentPageBooks = books.slice(start, end);
+    // Call `extractRemainingResults` to get the remaining results based on the `books` array ↓
 
-    renderBookList(currentPageBooks, bookListFragment);
+    extractRemainingResults(books);
 
-    page++;
+    // Call `renderBookList` to render the remaining results based on the extracted `remainingPageResults` array ↓
+
+    renderBookList(remainingPageResults, bookListFragment);
+
+    // Call `updateShowMoreBtn` to update the 'show more' button based on the remaining books of the `books` array ↓
 
     updateShowMoreBtn(books);
   }
 };
 
+/** Show more button event listener */
 data.list.button.addEventListener("click", showMoreHandler);
 
 /*
@@ -399,21 +426,38 @@ data.list.button.addEventListener("click", showMoreHandler);
 
 */
 
-/** Filters the books based on the user's search form entries
+/** Filters the books based on the user's search form entries.
  * @param {array} books - The array of books to be filtered
  * @param {object} filters - The object containing the user's search form entries
  */
 const filterBooks = (books, filters) => {
+  /** The below for...of loop loops through the books array and checks to see
+   * if the title, author and genre match the user's search form entries.
+   * If it matches it pushes the book/data to the `searchResults` array.
+   */
   for (let book of books) {
+    /** Checks to see if the user's entry in the title field matches any of the book's titles.
+     * @returns {boolean} - Returns true or false based on whether the title matches or not.
+     */
     let titleMatch =
       filters.title.trim() === "" ||
       book.title.toLowerCase().includes(filters.title.toLowerCase());
 
+    /** Checks to see if the user's entry in the author field matches any of the book's authors.
+     * @returns {boolean} - Returns true or false based on whether the author matches or not.
+     */
     let authorMatch =
       filters.author === "any" || book.author === filters.author;
 
+    /** Checks to see if the user's entry in the genre field matches any of the book's genres.
+     * @returns {boolean} - Returns true or false based on whether the genre matches or not.
+     */
     let genreMatch = filters.genre === "any";
 
+    /** The below for...of loop loops through every book's genres list
+     * and checks to see if it matches the user's entry in the genre field.
+     * If it matches it sets `genreMatch` to true.
+     */
     for (let singleGenre of book.genres) {
       if (singleGenre === filters.genre) {
         genreMatch = true;
@@ -425,35 +469,34 @@ const filterBooks = (books, filters) => {
     }
   }
 };
-/** Displays error message to user if no results are found */
+/** Displays error message to user if no results are found. */
 const displayIfNoResults = () => {
   searchResults.length < 1
     ? data.list.message.classList.add("list__message_show")
     : data.list.message.classList.remove("list__message_show");
 };
 
-/** Extracts the initial page load results (0 - 36 `BOOKS_PER_PAGE`) before the user clicks 'show more' */
-const extractInitialResults = () => {
-  let page = 0;
-  const start = page * BOOKS_PER_PAGE;
-  const end = (page + 1) * BOOKS_PER_PAGE;
-
-  initialPageResults = searchResults.slice(start, end);
-  return initialPageResults;
-};
-
+/** `searchResultsHandler` handles the search form submission and results event.
+ * @param {target} event - The form that the user has clicked on. (See related event listener below)
+ */
 const searchResultsHandler = (event) => {
   // Prevent the default behaviour of the form so that we can work with the form data ↓
   event.preventDefault();
 
-  // Reset page to 0 and empty searchResults so that the search results are not appended to the previous search results, and so that the `page` is reset to 0 for the new search results ↓
+  // Reset the `page` to 1 so that every time the user searches the pagination does not carry on from a potential previous search ↓
 
   page = 1;
+
+  // Empty the `searchResults` array so that the user's search results are not appended to a potential previous search ↓
+
   searchResults.length = 0;
 
   // Extract form entries and store it in `filters` ↓
 
+  /** Creates an object that contains the data from the form that was submitted */
   const formData = new FormData(event.target);
+
+  /** Creates an object from the form entries */
   const filters = Object.fromEntries(formData);
 
   // Call `filterBooks` to filter the books based on the user's search form entries ↓
@@ -486,32 +529,76 @@ const searchResultsHandler = (event) => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
+/** Search form submission event listener */
 data.search.form.addEventListener("submit", searchResultsHandler);
 
-data.list.items.addEventListener("click", (event) => {
-    
+/** Search button event listener */
+data.header.search.addEventListener("click", (event) => {
+  data.search.overlay.show();
+  data.search.title.focus();
 });
 
-data-list-items.click() {
-    pathArray = Array.from(event.path || event.composedPath())
-    active;
+/** Search overlay close button event listener */
+data.search.cancel.addEventListener("click", (event) => {
+  data.search.overlay.close();
+});
 
-    for (node; pathArray; i++) {
-        if active break;
-        const previewId = node?.dataset?.preview
+/*
 
-        for (const singleBook of books) {
-            if (singleBook.id === id) active = singleBook
-        }
+                                                                    BOOK PREVIEWS ↓
+
+*/
+
+/** `activeBook` holds the data of the unique book that the user has clicked on. */
+let activeBook = "";
+
+/** Identifies the `activeBook` the user has clicked on to view the preview.
+ * @param {target} event - The event target that the user has clicked on
+ */
+const identifyBook = (event) => {
+  /** `previewId` holds the id of the book that the user has clicked on. */
+  let previewId = event.target.closest("[book-id]").getAttribute("book-id");
+
+  /** The below for...of loop loops through each book in the `books` array
+   * and checks to see if the id of the book strictly matches the id of the
+   * book that was clicked on. If it matches it assigns the `singleBook` to the `activeBook` variable. */
+  for (let singleBook of books) {
+    if (singleBook.id === previewId) {
+      activeBook = singleBook;
     }
+  }
+};
 
-    if !active return
-    data-list-active.open === true
-    data-list-blur + data-list-image === active.image
-    data-list-title === active.title
+/** Populates the preview overlay with the `activeBook` data.
+ * @param {object} activeBook - The object containing the data of the unique book that the user has clicked on
+ */
+const populatePreview = (activeBook) => {
+  data.list.image.setAttribute("src", activeBook.image);
+  data.list.blur.setAttribute("src", activeBook.image);
+  data.list.title.innerHTML = activeBook.title;
 
-    data-list-subtitle === '${authors[active.author]} (${Date(active.published).year})'
-    data-list-description === active.description
-}
+  data.list.subtitle.innerHTML = `${authors[activeBook.author]} (${new Date(
+    activeBook.published
+  ).getFullYear()})`;
+  data.list.description.innerHTML = activeBook.description;
+};
 
+/** Book preview event listener, added to the whole list of books so that we don't need an event listener on each book element */
+data.list.items.addEventListener("click", (event) => {
+  // Call `identifyBook` to identify the book that was clicked on ↓
 
+  identifyBook(event);
+
+  // Call `populatePreview` to populate the preview with the book that was clicked on ↓
+
+  populatePreview(activeBook);
+
+  // Display the active book preview overlay to the user ↓
+
+  data.list.active.show();
+});
+
+/** Preview overlay close button event listener */
+data.list.close.addEventListener("click", (event) => {
+  data.list.active.close();
+});
