@@ -202,6 +202,7 @@ const populatePreview = (activeBook) => {
     activeBook.published
   ).getFullYear()})`;
   data.list.description.innerHTML = activeBook.description;
+  data.list.description.style.overflowY = "auto";
 };
 
 /** Book preview event listener, added to the whole list of books so that we don't need an event listener on each book element */
