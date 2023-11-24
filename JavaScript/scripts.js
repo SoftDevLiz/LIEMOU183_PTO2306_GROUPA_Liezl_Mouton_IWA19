@@ -1,6 +1,6 @@
 /*
 
-                                                                    IMPORTS ↓
+                                                        IMPORTS/GLOBAL VARIABLE BOOKS_PER_PAGE ↓
 
 */
 
@@ -8,7 +8,7 @@ import { BOOKS_PER_PAGE, authors, genres, books } from "./data.js";
 
 /*
 
-                                                                DOCUMENT FRAGMENTS ↓
+                                                                  DOCUMENT FRAGMENTS ↓
 
 */
 
@@ -25,7 +25,7 @@ const authorFragment = document.createDocumentFragment();
 
 /*
 
-                                                                DOM REFERENCES ↓
+                                                                  DOM REFERENCES ↓
 
 */
 
@@ -89,7 +89,7 @@ let initialPageResults = [];
 
 /** Extracts the `initialPageResults` (0 - 36 `BOOKS_PER_PAGE`) before the user clicks 'show more'.
  * @param {object} object - The object that you want to extract the initial results from.
- * @returns {array} - Returns the initial results (0 - 36 `BOOKS_PER_PAGE`).
+ * @returns {array} - Returns the initial book list (0 - 36 `BOOKS_PER_PAGE`).
  */
 const extractInitialResults = (object) => {
   // Slice the object based on the `BOOKS_PER_PAGE` to get the initial 36 results ↓
@@ -132,8 +132,8 @@ const createBookElement = ({ author, image, title, id }) => {
 
 // Create the `renderBookList` function ↓
 
-/** `renderBookList` loops through the subset of the given object parameter and then `createBookElement`
- *  for each book. It then appends the `singleBook` to the given fragment parameter.
+/** `renderBookList` loops through the subset of the given object parameter and then `createBookElement` is called
+ * for each book. It then appends the `singleBook` to the given fragment parameter.
  * @param {object} object - The object that you want to render the book list for. This can be `books` or `searchResults`.
  * @param {object} fragment - The fragment that you want to append the `singleBook` to. This can be `bookListFragment` or `searchResultsFragment`.
  */
@@ -170,15 +170,25 @@ renderBookList(initialPageResults, bookListFragment);
 
 */
 
+// Created the `activeBook` variable ↓
+
 /** `activeBook` holds the data of the unique book that the user has clicked on. */
 let activeBook = "";
 
+// Created the `identifyBook` function ↓
+
 /** Identifies the `activeBook` the user has clicked on to view the preview.
- * @param {target} event - The event target that the user has clicked on
+ * @param {target} event - The event target that the user has clicked on.
  */
 const identifyBook = (event) => {
-  /** `previewId` holds the id of the book that the user has clicked on. */
-  let previewId = event.target.closest("[book-id]").getAttribute("book-id");
+  // Create the `element` and `previewId` variables ↓
+
+  /** `element` checks for the closest element that was clicked on which includes "[book-id]", returns true or false. */
+  let element = event.target.closest("[book-id]");
+  /** `previewId` is a ternary that checks if `element` is truthy, if so it gets the id attribute.*/
+  let previewId = element ? element.getAttribute("book-id") : "";
+
+  // Start the for...of loop to loop through each book and get the id ↓
 
   /** The below for...of loop loops through each book in the `books` array
    * and checks to see if the id of the book strictly matches the id of the
@@ -190,20 +200,31 @@ const identifyBook = (event) => {
   }
 };
 
+// Created the `populatePreview` function ↓
+
 /** Populates the preview overlay with the `activeBook` data.
  * @param {object} activeBook - The object containing the data of the unique book that the user has clicked on
  */
 const populatePreview = (activeBook) => {
+  // Set the attributes and innerHTML of the preview overlay ↓
+
   data.list.image.setAttribute("src", activeBook.image);
   data.list.blur.setAttribute("src", activeBook.image);
   data.list.title.innerHTML = activeBook.title;
+
+  // Set the subtitle, description, and date of publish of the preview overlay ↓
 
   data.list.subtitle.innerHTML = `${authors[activeBook.author]} (${new Date(
     activeBook.published
   ).getFullYear()})`;
   data.list.description.innerHTML = activeBook.description;
+
+  // Set the style of the description so that it has a scrollbar if the description is too long ↓
+
   data.list.description.style.overflowY = "auto";
 };
+
+// Created the book preview event listener which calls the above functions ↓
 
 /** Book preview event listener, added to the whole list of books so that we don't need an event listener on each book element */
 data.list.items.addEventListener("click", (event) => {
@@ -220,6 +241,8 @@ data.list.items.addEventListener("click", (event) => {
   data.list.active.show();
 });
 
+// Created the book preview close button event listener ↓
+
 /** Preview overlay close button event listener */
 data.list.close.addEventListener("click", (event) => {
   data.list.active.close();
@@ -231,27 +254,30 @@ data.list.close.addEventListener("click", (event) => {
 
 */
 
+// Created the `page` variable ↓
+
 /** `page` represents the 'page' that we are on relating to the `BOOKS_PER_PAGE`.
  * This is used for calculating the `remainingBooks` and for pagination when it comes to the `showMoreHandler`(Show more button).
- * @example If we are on page 1, show the first 36 books.
- * If we are on page 2, show the next 36 books.
  */
 let page = 1;
 
 // Created the `remainingBooks` function ↓
 
-/** Calculates the remaining amount of books to be displayed. */
+/** Calculates the remaining amount of books to be displayed.
+ * @param {object} object - The object that you want to calculate the remaining books for. This gets passed
+ * to the `remainingBooks` function automatically based on the `updateShowMoreBtn` function.
+ */
 const remainingBooks = (object) => {
   // Use boolean logic to check if the remaining amount of books is bigger than 0 ↓
 
-  /** `isNotZero` checks if the remaining amount of books is bigger than 0, returning true or false */
+  /** `isNotZero` checks if the remaining amount of books is bigger than 0, returning true or false. */
   const isNotZero = object.length - [page * BOOKS_PER_PAGE] > 0;
 
   // Start the conditional statement ↓
 
   if (isNotZero) {
     data.list.button.disabled = false;
-    /** `remaining` calculates and holds the remaining amount of books */
+    /** `remaining` calculates and holds the remaining amount of books. */
     const remaining = object.length - [page * BOOKS_PER_PAGE];
     return remaining;
   } else {
@@ -283,11 +309,15 @@ updateShowMoreBtn(books);
 
 */
 
+// Created the `searchResults` and `remainingPageResults` variables ↓
+
 /** `searchResults` is an array of the matching books from the users search (user can search: title, author, genre). */
 let searchResults = [];
 
 /** `remainingPageResults` is an array that stores the remaining books to be displayed when the user clicks the 'show more' button. */
 let remainingPageResults = [];
+
+// Created the `extractRemainingResults` function ↓
 
 /** Extracts the remaining results to be displayed when the user clicks the 'show more' button.
  * @param {object} object - The object that you want to extract the remaining results from.
@@ -296,10 +326,10 @@ let remainingPageResults = [];
 const extractRemainingResults = (object) => {
   // Get the starting and ending index for the slicing. This is based on the `page` variable. Every time the user clicks the 'show more' button, the `page` variable increases by 1, therefore we can get the next batch of 36 `BOOKS_PER_PAGE` ↓
 
-  /** `start` holds the starting index for the slicing */
+  /** `start` holds the starting index for the slicing. */
   const start = page * BOOKS_PER_PAGE;
 
-  /** `end` holds the ending index for the slicing */
+  /** `end` holds the ending index for the slicing. */
   const end = (page + 1) * BOOKS_PER_PAGE;
 
   // Slice the array based on the starting and ending index to get the remaining results ↓
@@ -314,6 +344,8 @@ const extractRemainingResults = (object) => {
 
   return remainingPageResults;
 };
+
+// Created the `showMoreHandler` function ↓
 
 /** `showMoreHandler` handles the 'show more' button click event.
  * If the user has used the search feature, the button will work based on the `searchResults` array.
@@ -349,6 +381,8 @@ const showMoreHandler = () => {
     updateShowMoreBtn(books);
   }
 };
+
+// Created the 'show more' button event listener ↓
 
 /** Show more button event listener */
 data.list.button.addEventListener("click", showMoreHandler);
@@ -473,6 +507,8 @@ populateAuthorDropdown();
 
 */
 
+// Created the `filterBooks` function ↓
+
 /** Filters the books based on the user's search form entries.
  * @param {array} books - The array of books to be filtered
  * @param {object} filters - The object containing the user's search form entries
@@ -516,12 +552,17 @@ const filterBooks = (books, filters) => {
     }
   }
 };
+
+// Created the `displayIfNoResults` function ↓
+
 /** Displays error message to user if no results are found. */
 const displayIfNoResults = () => {
   searchResults.length < 1
     ? data.list.message.classList.add("list__message_show")
     : data.list.message.classList.remove("list__message_show");
 };
+
+// Created the `searchResultsHandler` function ↓
 
 /** `searchResultsHandler` handles the search form submission and results event.
  * @param {target} event - The form that the user has clicked on. (See related event listener below)
@@ -576,8 +617,12 @@ const searchResultsHandler = (event) => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
+// Created the search form submission event listener ↓
+
 /** Search form submission event listener */
 data.search.form.addEventListener("submit", searchResultsHandler);
+
+// Created the search overlay open and close button event listeners ↓
 
 /** Search button event listener */
 data.header.search.addEventListener("click", (event) => {
@@ -595,6 +640,8 @@ data.search.cancel.addEventListener("click", (event) => {
                                                             USER THEME SELECTION ↓
 
 */
+
+// Corrected the `day` and `night` objects ↓
 
 /** `day` contains the dark and light colours for the day theme */
 const day = {
