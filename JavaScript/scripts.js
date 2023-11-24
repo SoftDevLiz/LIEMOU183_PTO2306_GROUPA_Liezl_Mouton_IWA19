@@ -1,12 +1,10 @@
 /*
 
-                                                              IMPORTS + GLOBAL VARIABLES ↓
+                                                                    IMPORTS ↓
 
 */
 
 import { BOOKS_PER_PAGE, authors, genres, books } from "./data.js";
-
-// Initialized variables correctly ↓
 
 /*
 
@@ -14,7 +12,7 @@ import { BOOKS_PER_PAGE, authors, genres, books } from "./data.js";
 
 */
 
-// Initialized fragment variables correctly ↓
+// Created document fragments so we can work with them throughout the file ↓
 
 /** `searchResultsFragment` holds a document fragment to be used to display the search results */
 const searchResultsFragment = document.createDocumentFragment();
@@ -78,33 +76,11 @@ const data = {
 
 /*
 
-                                                                INITIAL BOOK LISTS ↓
+                                                              INITIAL BOOK LISTS ↓
 
 */
 
-// Created the `createBookElement` function ↓
-
-/** `createBookElement` creates the button element for each of our main list of books and then creates the innerHTML of the button
- * using the author, image, title and id parameters (which is passed to it from the below for...of loop that is running
- * through each book) and their related existing css classes.
- * The function then returns the `preview` so that it can be appended to the `bookListFragment`, and then that
- * gets appended to data.list.items (the div element that holds the list of books, 36 `BOOKS_PER_PAGE`)
- */
-const createBookElement = ({ author, image, title, id }) => {
-  /** `preview` creates/holds a button element for each book which is each books `preview` */
-  const preview = document.createElement("button");
-  preview.classList = "preview";
-  preview.setAttribute("book-id", id);
-  preview.innerHTML = /* html */ `
-  <img class="preview__image" src="${image}"/>
-
-    <div class="preview__info">
-      <h3 class="preview__title">${title}</h3>
-      <div class="preview__author">${authors[author]}</div>
-  </div>`;
-
-  return preview;
-};
+// Create the `initialPageResults` variable to hold the 36 books for the initial page load ↓
 
 /** `initialPageResults` is an array of the initial 36 `BOOKS_PER_PAGE` from the user's search before they click 'show more'
  * in order to display the initial 36 results to the user.
@@ -116,177 +92,146 @@ let initialPageResults = [];
  * @returns {array} - Returns the initial results (0 - 36 `BOOKS_PER_PAGE`).
  */
 const extractInitialResults = (object) => {
+  // Slice the object based on the `BOOKS_PER_PAGE` to get the initial 36 results ↓
+
   initialPageResults = object.slice(0, BOOKS_PER_PAGE);
   return initialPageResults;
 };
 
+// Called `extractInitialResults` function for the first page load, based on all of the `books` ↓
+
 extractInitialResults(books);
 
-/** `currentPageBooks` holds the subset of `books` that will be displayed on the current page.
- * 36 `BOOKS_PER_PAGE`.
+// Created the `createBookElement` function ↓
+
+/** `createBookElement` creates the button element for each of our main list of books and then creates the innerHTML of the button.
  */
-let currentPageBooks = books.slice(0, BOOKS_PER_PAGE);
+const createBookElement = ({ author, image, title, id }) => {
+  // Create the button element for each book ↓
 
-//  Corrected the for...of syntax + added variable initialization (It was a mix between the i++ method and the more modern for...of method) ↓
+  /** `bookElement` creates/holds a button element for each book which the user can click on to view the book preview. */
+  const bookElement = document.createElement("button");
 
-/** `renderBookList` loops through the subset of `currentPageBooks` and then `createBookElement`
- *  for each book for the current page. It then appends the `preview` to the `bookListFragment`.
+  // Set the class and attribute of the button element ↓
+
+  bookElement.classList = "preview";
+  bookElement.setAttribute("book-id", id);
+
+  // Set the innerHTML of the button element ↓
+
+  bookElement.innerHTML = /* html */ `
+  <img class="preview__image" src="${image}"/>
+
+    <div class="preview__info">
+      <h3 class="preview__title">${title}</h3>
+      <div class="preview__author">${authors[author]}</div>
+  </div>`;
+
+  return bookElement;
+};
+
+// Create the `renderBookList` function ↓
+
+/** `renderBookList` loops through the subset of the given object parameter and then `createBookElement`
+ *  for each book. It then appends the `singleBook` to the given fragment parameter.
+ * @param {object} object - The object that you want to render the book list for. This can be `books` or `searchResults`.
+ * @param {object} fragment - The fragment that you want to append the `singleBook` to. This can be `bookListFragment` or `searchResultsFragment`.
  */
 const renderBookList = (object, fragment) => {
+  // Start the for...of loop to loop through each book ↓
+
+  /** The below for...of loop loops through the given object and calls the `createBookElement` function for each book in the object. */
   for (let { author, image, title, id } of object) {
-    /** `preview` holds the preview for an individual book, created by the `createBookElement` function */
-    const preview = createBookElement({
+    /** `singleBook` holds the `bookElement` for an individual book, created by the `createBookElement` function */
+    const singleBook = createBookElement({
       author,
       image,
       title,
       id,
     });
 
-    fragment.appendChild(preview);
+    // Append the `singleBook` to the given fragment ↓
+
+    fragment.appendChild(singleBook);
+
+    // Append the given fragment to the list, making it visible in the UI ↓
+
     data.list.items.appendChild(fragment);
   }
 };
 
-// Called `renderBookList` function for the first page load ↓
+// Called `renderBookList` function for the first page load, based on the `initialPageResults` ↓
 
-renderBookList(currentPageBooks, bookListFragment);
-
-// Used `data` to append the `preview` to the list for the first page load ↓
+renderBookList(initialPageResults, bookListFragment);
 
 /*
 
-                                                SEARCH DROPDOWN CREATION ↓  
+                                                                    BOOK PREVIEWS ↓
 
 */
 
-/** `allGenresOpt` creates and holds a new HTML 'option' element for a genre dropdown list.
- * This element is used to create the 'All Genres' option element, which needs to be
- * done separately from the other genres.
+/** `activeBook` holds the data of the unique book that the user has clicked on. */
+let activeBook = "";
+
+/** Identifies the `activeBook` the user has clicked on to view the preview.
+ * @param {target} event - The event target that the user has clicked on
  */
-const allGenresOpt = document.createElement("option");
+const identifyBook = (event) => {
+  /** `previewId` holds the id of the book that the user has clicked on. */
+  let previewId = event.target.closest("[book-id]").getAttribute("book-id");
 
-allGenresOpt.value = "any";
-
-// Used .textContent to add 'All Genres' text to the dropdown list ↓
-
-allGenresOpt.textContent = "All Genres";
-
-genreFragment.appendChild(allGenresOpt);
-
-/** The below for...of loop loops through each property of the `genres` object.
- *  It then creates an HTML 'option' element for each genre and appends it to the `genreFragment`
- *  which follows on from the 'All Genres' option element.
- *  The element value is set to the id of the genre and the textContent is set to the genre name.
- */
-for (let [id, genre] of Object.entries(genres)) {
-  /** genreOption creates and holds an HTML 'option' element for our dropdown list
-   * that contains the genre id and genre name.
-   */
-  let genreOption = document.createElement("option");
-  genreOption.value = id;
-  genreOption.textContent = genre;
-  genreFragment.appendChild(genreOption);
-}
-
-// Used `data` reference to append the `genreFragment` to the search overlay ↓
-
-data.search.genres.appendChild(genreFragment);
-
-/** `allAuthorsOpt` creates and holds a new HTML 'option' element for an author dropdown list.
- * This element is used to create the 'All Authors' option element, which needs to be
- * done separately from the other authors.
- */
-const allAuthorsOpt = document.createElement("option");
-
-allAuthorsOpt.value = "any";
-allAuthorsOpt.textContent = "All Authors";
-
-authorFragment.appendChild(allAuthorsOpt);
-
-/** The below for...of loop loops through each property of the `authors` object.
- *  It then creates an HTML option element for each author and appends it to the `authorFragment`
- *  which follows on from the 'All Authors' option element.
- *  The element value is set to the id of the author and the textContent is set to the author name.
- */
-for (let [id, author] of Object.entries(authors)) {
-  /** authorOption creates and holds an HTML 'option' element for our dropdown list
-   * that contains the author id and author name.
-   */
-  let authorOption = document.createElement("option");
-  authorOption.value = id;
-  authorOption.textContent = author;
-  authorFragment.appendChild(authorOption);
-}
-
-// Used `data` reference to append the `authorFragment` to the search overlay ↓
-
-data.search.authors.appendChild(authorFragment);
-
-/*
-
-                                                            THEME SELECTION EVENT ↓
-
-*/
-
-// Initialized day + night variables correctly ↓
-
-/** `day` contains the dark and light colours for the day theme */
-const day = {
-  dark: "10, 10, 20",
-  light: "255, 255, 255",
-};
-
-/** `night` contains the dark and light colours for the night theme */
-const night = {
-  dark: "255, 255, 255",
-  light: "10, 10, 20",
-};
-
-// Used `data` reference to refer to correct elements in ternary statement and removed redundant ternary ↓
-
-data.settings.theme.value === window.matchMedia &&
-window.matchMedia("(prefers-color-scheme: dark)").matches
-  ? "night"
-  : "day";
-
-// Created the theme selection event listener and handler ↓
-
-/** The below event listener listens for when the user submits the form. The event listener is tied to the form
- * as a whole and not the submit button so it can run when the user clicks the submit button or presses the enter key.
- * When the user submits the form, the event handler prevents the default behaviour of the form so that we can
- * work with the form data. The event handler then checks to see if the theme value is equal to day or night
- * and changes the CSS variables accordingly.
- */
-data.settings.form.addEventListener("submit", (event) => {
-  event.preventDefault();
-  /** `isDay` checks to see if the value of the dropdown list option for the current theme is 'day' or 'night',
-   * returning true or false.
-   */
-  const isDay = data.settings.theme.value === "day";
-  /**`isNight` checks to see if the value of the dropdown list option for the current theme is 'day' or 'night',
-   * returning true or false.
-   */
-  const isNight = data.settings.theme.value === "night";
-
-  if (isDay) {
-    document.documentElement.style.setProperty("--color-dark", day.dark);
-    document.documentElement.style.setProperty("--color-light", day.light);
-  } else if (isNight) {
-    document.documentElement.style.setProperty("--color-dark", night.dark);
-    document.documentElement.style.setProperty("--color-light", night.light);
+  /** The below for...of loop loops through each book in the `books` array
+   * and checks to see if the id of the book strictly matches the id of the
+   * book that was clicked on. If it matches it assigns the `singleBook` to the `activeBook` variable. */
+  for (let singleBook of books) {
+    if (singleBook.id === previewId) {
+      activeBook = singleBook;
+    }
   }
+};
 
-  data.settings.overlay.close();
+/** Populates the preview overlay with the `activeBook` data.
+ * @param {object} activeBook - The object containing the data of the unique book that the user has clicked on
+ */
+const populatePreview = (activeBook) => {
+  data.list.image.setAttribute("src", activeBook.image);
+  data.list.blur.setAttribute("src", activeBook.image);
+  data.list.title.innerHTML = activeBook.title;
+
+  data.list.subtitle.innerHTML = `${authors[activeBook.author]} (${new Date(
+    activeBook.published
+  ).getFullYear()})`;
+  data.list.description.innerHTML = activeBook.description;
+};
+
+/** Book preview event listener, added to the whole list of books so that we don't need an event listener on each book element */
+data.list.items.addEventListener("click", (event) => {
+  // Call `identifyBook` to identify the book that was clicked on ↓
+
+  identifyBook(event);
+
+  // Call `populatePreview` to populate the preview with the book that was clicked on ↓
+
+  populatePreview(activeBook);
+
+  // Display the active book preview overlay to the user ↓
+
+  data.list.active.show();
+});
+
+/** Preview overlay close button event listener */
+data.list.close.addEventListener("click", (event) => {
+  data.list.active.close();
 });
 
 /*
 
-                                                REMAINING BOOKS FOR SHOW MORE BUTTON AND EVENT ↓
+                                                REMAINING BOOKS FOR SHOW MORE BUTTON AND SHOW MORE EVENT ↓
 
 */
 
 /** `page` represents the 'page' that we are on relating to the `BOOKS_PER_PAGE`.
- * This is used for pagination when it comes to the `showMoreHandler`(Show more button).
+ * This is used for calculating the `remainingBooks` and for pagination when it comes to the `showMoreHandler`(Show more button).
  * @example If we are on page 1, show the first 36 books.
  * If we are on page 2, show the next 36 books.
  */
@@ -294,19 +239,19 @@ let page = 1;
 
 // Created the `remainingBooks` function ↓
 
-/** `remainingBooks` checks to see if the remaining amount of books `isNotZero`.
- * If it is not zero, it updates the remaining amount of books and returns the `remaining` amount of books.
- * If it is zero, it returns 0 and disables the button.
- */
+/** Calculates the remaining amount of books to be displayed. */
 const remainingBooks = (object) => {
+  // Use boolean logic to check if the remaining amount of books is bigger than 0 ↓
+
   /** `isNotZero` checks if the remaining amount of books is bigger than 0, returning true or false */
   const isNotZero = object.length - [page * BOOKS_PER_PAGE] > 0;
 
+  // Start the conditional statement ↓
+
   if (isNotZero) {
     data.list.button.disabled = false;
-    /** `remaining` calculates the remaining amount of books */
+    /** `remaining` calculates and holds the remaining amount of books */
     const remaining = object.length - [page * BOOKS_PER_PAGE];
-
     return remaining;
   } else {
     data.list.button.disabled = true;
@@ -314,9 +259,12 @@ const remainingBooks = (object) => {
   }
 };
 
-// Used `data` references, added backticks for interpolation, removed square brackets and redundant code, made it into a function ↓
+// Create updateShowMoreBtn function, to update the button based on the `remainingBooks` ↓
 
-/** `updateShowMoreBtn` updates the 'show more' button visually depending on the `remainingBooks` */
+/** `updateShowMoreBtn` updates the 'show more' button visually depending on the `remainingBooks`
+ * @param {object} object - The object that you want to update the 'show more' button for. This
+ * can be `books` or `searchResults`.
+ */
 const updateShowMoreBtn = (object) => {
   data.list.button.innerHTML =
     /* html */
@@ -324,25 +272,9 @@ const updateShowMoreBtn = (object) => {
       <span class="list__remaining"> (${remainingBooks(object)})</span>`;
 };
 
-// Called the `updateShowMoreBtn` to update the 'show more' for the initial page load ↓
+// Called the `updateShowMoreBtn` to update the 'show more' button for the initial page load ↓
 
 updateShowMoreBtn(books);
-
-/*
-
-                                                              BASIC TOGGLE EVENTS ↓
-
-*/
-
-// Created event listeners and handlers for the toggling of overlays ↓
-
-data.header.settings.addEventListener("click", (event) => {
-  data.settings.overlay.show();
-});
-
-data.settings.cancel.addEventListener("click", (event) => {
-  data.settings.overlay.close();
-});
 
 /*
 
@@ -419,6 +351,120 @@ const showMoreHandler = () => {
 
 /** Show more button event listener */
 data.list.button.addEventListener("click", showMoreHandler);
+
+/*
+
+                                                              SEARCH DROPDOWN CREATION ↓  
+
+*/
+
+// Created the createAnyGenreOpt function ↓
+
+/** Creates the 'all genres' option for the genre dropdown list. */
+const createAnyGenreOpt = () => {
+  /** `allGenresOpt` creates and holds a new HTML 'option' element for the
+   *  'All Genres' option. This needs to be done separately from the other genres,
+   *   because it will have the value of 'any'.
+   */
+  const allGenresOpt = document.createElement("option");
+
+  // Used .value to add 'any' value to the 'All Genres' option ↓
+
+  allGenresOpt.value = "any";
+
+  // Used .textContent to add 'All Genres' text to the 'All Genres' option ↓
+
+  allGenresOpt.textContent = "All Genres";
+
+  // Append the 'All Genres' option to the `genreFragment` ↓
+
+  genreFragment.appendChild(allGenresOpt);
+};
+
+// Created the populateGenreDropdown function ↓
+
+/** Populates the genre dropdown list with all of the genres. */
+const populateGenreDropdown = () => {
+  // Used a for...of loop to loop through each property of the `genres` object ↓
+
+  /** The below for...of loop loops through each property of the `genres` object.
+   *  It then creates an HTML 'option' element for each genre and appends it to the `genreFragment`
+   *  which follows on from the 'All Genres' option element.
+   *  The element value is set to the id of the genre and the textContent is set to the genre name.
+   */
+  for (let [id, genre] of Object.entries(genres)) {
+    /** `genreOption` creates and holds an HTML 'option' element for our dropdown list
+     * that contains the genre id and genre name. */
+    const genreOption = document.createElement("option");
+    genreOption.value = id;
+    genreOption.textContent = genre;
+    genreFragment.appendChild(genreOption);
+  }
+
+  // Used `data` reference to append the `genreFragment` to the genre search form, which will make it visible in the UI ↓
+
+  data.search.genres.appendChild(genreFragment);
+};
+
+// Called the `createAnyGenreOpt` and `populateGenreDropdown` functions ↓
+
+createAnyGenreOpt();
+
+populateGenreDropdown();
+
+// Created the createAnyAuthorOpt function ↓
+
+/** Creates the 'all authors' option for the author dropdown list. */
+const createAnyAuthorOpt = () => {
+  /** `allAuthorsOpt` creates and holds a new HTML 'option' element for the
+   *  'All Authors' option. This needs to be done separately from the other genres,
+   *   because it will have the value of 'any'.
+   */
+  const allAuthorsOpt = document.createElement("option");
+
+  // Used .value to add 'any' value to the 'All Authors' option ↓
+
+  allAuthorsOpt.value = "any";
+
+  // Used .textContent to add 'All Authors' text to the 'All Authors' option ↓
+
+  allAuthorsOpt.textContent = "All Authors";
+
+  // Append the 'All Authors' option to the `authorFragment` ↓
+
+  authorFragment.appendChild(allAuthorsOpt);
+};
+
+// Created the populateAuthorDropdown function ↓
+
+/** Populates the author dropdown list with all of the authors. */
+const populateAuthorDropdown = () => {
+  // Used a for...of loop to loop through each property of the `authors` object ↓
+
+  /** The below for...of loop loops through each property of the `authors` object.
+   *  It then creates an HTML option element for each author and appends it to the `authorFragment`
+   *  which follows on from the 'All Authors' option element.
+   *  The element value is set to the id of the author and the textContent is set to the author name.
+   */
+  for (let [id, author] of Object.entries(authors)) {
+    /** authorOption creates and holds an HTML 'option' element for our dropdown list
+     * that contains the author id and author name.
+     */
+    const authorOption = document.createElement("option");
+    authorOption.value = id;
+    authorOption.textContent = author;
+    authorFragment.appendChild(authorOption);
+  }
+  // Used `data` reference to append the `authorFragment` to the author search form, which will make it visible in the UI ↓
+
+  data.search.authors.appendChild(authorFragment);
+};
+
+// Called the `createAnyAuthorOpt` and `populateAuthorDropdown` functions ↓
+
+createAnyAuthorOpt();
+
+populateAuthorDropdown();
 
 /*
 
@@ -545,60 +591,103 @@ data.search.cancel.addEventListener("click", (event) => {
 
 /*
 
-                                                                    BOOK PREVIEWS ↓
+                                                            USER THEME SELECTION ↓
 
 */
 
-/** `activeBook` holds the data of the unique book that the user has clicked on. */
-let activeBook = "";
+/** `day` contains the dark and light colours for the day theme */
+const day = {
+  dark: "10, 10, 20",
+  light: "255, 255, 255",
+};
 
-/** Identifies the `activeBook` the user has clicked on to view the preview.
- * @param {target} event - The event target that the user has clicked on
- */
-const identifyBook = (event) => {
-  /** `previewId` holds the id of the book that the user has clicked on. */
-  let previewId = event.target.closest("[book-id]").getAttribute("book-id");
+/** `night` contains the dark and light colours for the night theme */
+const night = {
+  dark: "255, 255, 255",
+  light: "10, 10, 20",
+};
 
-  /** The below for...of loop loops through each book in the `books` array
-   * and checks to see if the id of the book strictly matches the id of the
-   * book that was clicked on. If it matches it assigns the `singleBook` to the `activeBook` variable. */
-  for (let singleBook of books) {
-    if (singleBook.id === previewId) {
-      activeBook = singleBook;
-    }
+// Created the `setThemeToNight` function ↓
+
+/** Sets the theme to night */
+const setThemeToNight = () => {
+  document.documentElement.style.setProperty("--color-dark", night.dark);
+  document.documentElement.style.setProperty("--color-light", night.light);
+};
+
+// Created the `setThemeToDay` function ↓
+
+/** Sets the theme to day */
+const setThemeToDay = () => {
+  document.documentElement.style.setProperty("--color-dark", day.dark);
+  document.documentElement.style.setProperty("--color-light", day.light);
+};
+
+// Created the `checkDefaultTheme` function ↓
+
+/** Checks the users default browser theme */
+const checkDefaultTheme = () => {
+  // Start a ternary that checks if the user's default browser preferred theme is dark/night ↓
+
+  data.settings.theme.value === "night" &&
+  window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? setThemeToNight()
+    : setThemeToDay();
+};
+
+// Call `checkDefaultTheme` to check the user's default browser theme ↓
+
+checkDefaultTheme();
+
+// Created the `themeSelectionHandler` function to handle the theme selection event ↓
+
+/** Handles the user's theme selection event */
+const themeSelectionHandler = (event) => {
+  // Prevent the default behaviour of the form so that we can work with the form data ↓
+
+  event.preventDefault();
+
+  // Create two boolean variables for our if statement ↓
+
+  /** `isDay` checks to see if the value of the dropdown list option for the current theme is 'day',
+   * returning true or false.
+   */
+  const isDay = data.settings.theme.value === "day";
+  /**`isNight` checks to see if the value of the dropdown list option for the current theme is 'night',
+   * returning true or false.
+   */
+  const isNight = data.settings.theme.value === "night";
+
+  // Start the conditional statement that checks if the theme is day or night ↓
+
+  if (isDay) {
+    // Call `setThemeToDay` to set the theme to day ↓
+
+    setThemeToDay();
+  } else if (isNight) {
+    // Call `setThemeToNight` to set the theme to night ↓
+
+    setThemeToNight();
   }
+
+  // Close the settings overlay ↓
+
+  data.settings.overlay.close();
 };
 
-/** Populates the preview overlay with the `activeBook` data.
- * @param {object} activeBook - The object containing the data of the unique book that the user has clicked on
- */
-const populatePreview = (activeBook) => {
-  data.list.image.setAttribute("src", activeBook.image);
-  data.list.blur.setAttribute("src", activeBook.image);
-  data.list.title.innerHTML = activeBook.title;
+// Created listeners and handlers for the closing/opening of the settings overlay ↓
 
-  data.list.subtitle.innerHTML = `${authors[activeBook.author]} (${new Date(
-    activeBook.published
-  ).getFullYear()})`;
-  data.list.description.innerHTML = activeBook.description;
-};
-
-/** Book preview event listener, added to the whole list of books so that we don't need an event listener on each book element */
-data.list.items.addEventListener("click", (event) => {
-  // Call `identifyBook` to identify the book that was clicked on ↓
-
-  identifyBook(event);
-
-  // Call `populatePreview` to populate the preview with the book that was clicked on ↓
-
-  populatePreview(activeBook);
-
-  // Display the active book preview overlay to the user ↓
-
-  data.list.active.show();
+/** Settings button event listener */
+data.header.settings.addEventListener("click", (event) => {
+  data.settings.overlay.show();
 });
 
-/** Preview overlay close button event listener */
-data.list.close.addEventListener("click", (event) => {
-  data.list.active.close();
+/** Settings cancel button event listener */
+data.settings.cancel.addEventListener("click", (event) => {
+  data.settings.overlay.close();
 });
+
+// Created the settings form submission event listener ↓
+
+/** Settings form submission event listener */
+data.settings.form.addEventListener("submit", themeSelectionHandler);
